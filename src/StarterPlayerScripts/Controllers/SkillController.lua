@@ -1,0 +1,142 @@
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+
+
+local _PlayerGui : PlayerGui
+local function getPlayerGui() -- Returns PlayerGui
+    if not _PlayerGui then
+        _PlayerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
+    end
+    return _PlayerGui
+end
+
+local _SlotsUI : Frame
+local function getSlotsUI() -- Returns the Slots UI
+    if not _SlotsUI then
+        _SlotsUI = getPlayerGui():WaitForChild("Toolbar"):WaitForChild("Slots")
+    end
+    return _SlotsUI
+end
+
+
+-- Create Controller
+local RS = game:GetService("ReplicatedStorage")
+local Knit = require(RS.Framework.Internal.Packages.Knit)
+
+local SkillController = Knit.CreateController { Name = "SkillController" }
+
+-- Module References
+local skillModule = require(RS.Framework.Modules.SkillsModule)
+local SkillService
+
+-- Controller Variables
+local RegisteredSkills : {skillModule.SkillType} = table.create(10,-1)
+
+
+
+
+--[---------------------------]--
+--[          METHODS          ]--
+--[---------------------------]--
+
+local function fxEventCallback(inst : Instance, parent : Instance)
+    print("FX Event Received")
+    if inst:IsA("Sound") then
+        inst = inst :: Sound
+        inst.Parent = parent
+        inst:Play()
+        inst.Ended:Wait()
+        inst:Destroy()
+    end
+    if inst:IsA("Attachment") then
+        inst = inst :: Attachment
+        inst.Parent = parent
+    end
+end
+
+
+
+-- Registers a skill to the player's toolbar
+function SkillController:RegisterSkill(skillName: string)
+    -- Send register request to server
+    local success, registeredSkills = SkillService:RegisterSkill(skillName):await()
+    if not success then warn("Promise to register skill failed") return end
+    RegisteredSkills = registeredSkills -- Update toolbar data
+
+    -- Update all slots in UI
+    local slotsUI = getSlotsUI()
+    for _,slot in slotsUI:GetChildren() do
+        if not slot:IsA("Frame") then continue end
+        local skill = RegisteredSkills[slot.LayoutOrder]
+        if skill == -1 then continue end
+        slot.SkillName.Text = skill.Name
+    end
+end
+
+-- Uses a skill from the toolbar
+function SkillController:UseSkill(skillIndex)
+    -- Sanity checks
+    if (skillIndex < 0) or (skillIndex > #RegisteredSkills) then return end
+    local skill = RegisteredSkills[skillIndex]
+    if skill == -1 then return end
+    if skill.Active then return end
+    skill.Active = true
+
+    -- Create skill input data
+    local skillInputData : skillModule.skillInputData = {
+        mouseHitPosition = Players.LocalPlayer:GetMouse().Hit.Position
+    }
+
+    -- Send use request to server
+    local success, registeredSkills = SkillService:UseSkillSlot(skillIndex, skillInputData):await()
+    if not success then warn("Promise to use skill failed") return end
+    RegisteredSkills = registeredSkills -- Update toolbar data
+
+    -- Check for FX event
+    if skill.FXEvent then
+        skill.FXEvent.OnClientEvent:Connect(fxEventCallback)
+    end
+end
+
+
+
+--[---------------------------]--
+--[        KNIT METHODS       ]--
+--[---------------------------]--
+
+
+-- Updates SlotUI
+local function SlotUIUpdate(deltaTime)
+    local slotsUI = getSlotsUI()
+    for _,slot in slotsUI:GetChildren() do
+        -- Sanity checks
+        if not slot:IsA("Frame") then continue end
+        local skill = RegisteredSkills[slot.LayoutOrder]
+        if skill == -1 then continue end
+
+        -- Update cooldowns
+        local cooldownValue = 0
+        local cooldownDiff = skill.CooldownEndTimestamp - (DateTime.now().UnixTimestampMillis/1000)
+        if cooldownDiff > 0 then cooldownValue = cooldownDiff/skill.Cooldown end
+        slot.CooldownOverlay.Size = UDim2.fromScale(cooldownValue,1)
+    end
+end
+
+
+function SkillController:KnitStart()
+    -- Register skills (for debugging)
+    self:RegisterSkill("Sonido")
+    self:RegisterSkill("Hop")
+    self:RegisterSkill("Fireball")
+    self:RegisterSkill("Godray")
+
+    getSlotsUI().Parent.Enabled = true
+    local slotUIUpdateHandle = RunService.RenderStepped:Connect(SlotUIUpdate)
+end
+
+function SkillController:KnitInit()
+    SkillService = Knit.GetService("SkillService")
+    --print("SkillController KnitInit")
+end
+
+return SkillController

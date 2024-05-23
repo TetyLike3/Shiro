@@ -1,0 +1,39 @@
+{
+    "name": "Shiro",
+    "tree": {
+        "$className": "DataModel",
+
+        "ReplicatedStorage": {
+            "$className": "ReplicatedStorage",
+            "Framework": {
+                "$className": "Folder",
+                "Internal": {
+                    "$className": "Folder",
+                    "Packages": {
+                        "$path": "Packages"
+                    }
+                },
+                "Modules": {
+                    "$path": "src/ReplicatedStorage/Modules"
+                }
+            }
+        },
+
+        "ServerScriptService": {
+            "$className": "ServerScriptService",
+            "Framework": {
+                "$path": "src/ServerScriptService"
+            }
+        },
+
+        "StarterPlayer": {
+            "$className": "StarterPlayer",
+            "StarterPlayerScripts": {
+                "$className": "StarterPlayerScripts",
+                "Framework": {
+                    "$path": "src/StarterPlayerScripts"
+                }
+            }
+        }
+    }
+}
