@@ -1,5 +1,3 @@
-
-local DataStoreService = game:GetService("DataStoreService")
 local RS = game:GetService("ReplicatedStorage")
 local Knit = require(RS.Framework.Internal.Packages.Knit)
 
