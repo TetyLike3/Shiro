@@ -4,7 +4,7 @@ local StarterPlayer = game:GetService("StarterPlayer") -- For things like base w
 local TS = game:GetService("TweenService")
 local RS = game:GetService("ReplicatedStorage")
 
-local Knit = require(RS.Framework.Internal.Packages.Knit)
+local Framework = require(RS.Framework.Internal.Kuro)
 
 local StorageFolder
 local VFXFolder
@@ -14,12 +14,12 @@ local RagdollService
 
 -- Prevent module from loading server-side features on the client
 if game:GetService("RunService"):IsServer() then
-    StorageFolder = Knit.ServerStorage:WaitForChild("Skills") :: Folder
+    StorageFolder = ServerStorage.Framework:WaitForChild("Skills") :: Folder
     VFXFolder = StorageFolder._VFX :: Folder
 
     -- Get required services
-    Knit.OnStart():andThen(function()
-        RagdollService = Knit.GetService("RagdollService")
+    Framework.OnStart():andThen(function()
+        RagdollService = Framework.GetService("RagdollService")
     end)
 end
 
@@ -118,9 +118,9 @@ local function createFXEvent(skill : SkillType) : RemoteEvent
 end
 local function fireFXEvent(fxEvent : RemoteEvent, player : Player, inst : Instance, parent : Instance)
     if inst:IsA("Attachment") then
-        inst.Parent = Knit.SharedStorage.Temp.AttachmentParent
+        inst.Parent = Framework.SharedStorage.Temp.AttachmentParent
     else
-        inst.Parent = Knit.SharedStorage.Temp
+        inst.Parent = Framework.SharedStorage.Temp
     end
     fxEvent:FireClient(player, inst, parent)
 end

@@ -1,7 +1,7 @@
 local RS = game:GetService("ReplicatedStorage")
-local Knit = require(RS.Framework.Internal.Packages.Knit)
+local Framework = require(RS.Framework.Internal.Kuro)
 
-local RagdollService = Knit.CreateService {
+local RagdollService = Framework.CreateService {
     Name = "RagdollService",
 }
 
@@ -124,13 +124,12 @@ end
 --[---------------------------]--
 
 
-function RagdollService:KnitStart()
-    
+function RagdollService:FrameworkInit()
+    -- Nothing to initialize
 end
 
-
-function RagdollService:KnitInit()
-    
+function RagdollService:FrameworkStart()
+    -- Nothing to start
 end
 
 

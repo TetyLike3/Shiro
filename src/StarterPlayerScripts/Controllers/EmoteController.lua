@@ -1,8 +1,8 @@
 local RS = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
-local Knit = require(RS.Framework.Internal.Packages.Knit)
+local Framework = require(RS.Framework.Internal.Kuro)
 
-local EmoteController = Knit.CreateController { Name = "EmoteController" }
+local EmoteController = Framework.CreateController { Name = "EmoteController" }
 local EmoteService
 
 
@@ -20,7 +20,7 @@ local function connectGUI()
     gui.Enabled = true
 end
 
-function EmoteController:KnitStart()
+function EmoteController:FrameworkStart()
     Players.LocalPlayer.CharacterAdded:Connect(function()
         connectGUI()
     end)
@@ -31,8 +31,8 @@ function EmoteController:KnitStart()
 end
 
 
-function EmoteController:KnitInit()
-    EmoteService = Knit.GetService("EmoteService")
+function EmoteController:FrameworkInit()
+    EmoteService = Framework.GetService("EmoteService")
 end
 
 

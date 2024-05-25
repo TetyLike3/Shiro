@@ -1,8 +1,8 @@
 local Players = game:GetService("Players")
 local RS = game:GetService("ReplicatedStorage")
-local Knit = require(RS.Framework.Internal.Packages.Knit)
+local Framework = require(RS.Framework.Internal.Kuro)
 
-local WeaponService = Knit.CreateService {
+local WeaponService = Framework.CreateService {
     Name = "WeaponService",
     Client = {},
 }
@@ -50,7 +50,7 @@ end
 
 local function getWeaponCopy(player : Player) : Model
     if not playerWeapons[player.UserId] then return end
-    local weapon = Knit.ServerStorage.Weapons.Tools:FindFirstChild(playerWeapons[player.UserId].weaponName)
+    local weapon = Framework.ServerStorage.Weapons.Tools:FindFirstChild(playerWeapons[player.UserId].weaponName)
     if not weapon then warn(string.format("CRITICAL: Weapon %s does not exist in storage for user %s (%s)",playerWeapons[player.UserId].weaponName,player.Name,player.UserId)) return nil end
     return weapon
 end
@@ -59,7 +59,7 @@ local function getWeaponOnPlayer(player : Player) : Model
     return player.Character:FindFirstChild(playerWeapons[player.UserId].weaponName)
 end
 local function getWeaponAnimations(weaponName : string) : {lightAttacks: {{track: Animation} & weaponAnimationSounds}, heavyAttack: {track: Animation} & weaponAnimationSounds}
-    local weaponAnims = Knit.ServerStorage.Weapons.Animations:FindFirstChild(weaponName)
+    local weaponAnims = Framework.ServerStorage.Weapons.Animations:FindFirstChild(weaponName)
 
     local heavyAttackAnim = weaponAnims:FindFirstChild("HeavyAttack") :: Animation
     local entries = {
@@ -88,7 +88,7 @@ local function getWeaponAnimations(weaponName : string) : {lightAttacks: {{track
     return entries
 end
 local function getWeaponHitboxes(weaponName : string) : {lightAttackHitboxes: {Model}, heavyAttackHitbox: Model}
-    local weaponHitboxes = Knit.ServerStorage.Weapons.Hitboxes:FindFirstChild(weaponName)
+    local weaponHitboxes = Framework.ServerStorage.Weapons.Hitboxes:FindFirstChild(weaponName)
 
     local heavyAttackHitbox = weaponHitboxes:FindFirstChild("HeavyAttack") :: Model
     local entries = {
@@ -132,11 +132,11 @@ end
 local function createFXEvent(name)
     local fxEvent = Instance.new("RemoteEvent")
     fxEvent.Name = name
-    fxEvent.Parent = Knit.SharedStorage.Events
+    fxEvent.Parent = Framework.SharedStorage.Events
     return fxEvent
 end
 local function fireFXEvent(fxEvent : RemoteEvent, player : Player, inst : Instance, parent : Instance)
-    inst.Parent = Knit.SharedStorage.Temp
+    inst.Parent = Framework.SharedStorage.Temp
     fxEvent:FireClient(player, inst, parent)
 end
 
@@ -361,7 +361,7 @@ local function playerAddedCallback(player : Player)
     }
 end
 
-function WeaponService:KnitStart()
+function WeaponService:FrameworkStart()
     -- Create entry for each player that joins
     Players.PlayerAdded:Connect(playerAddedCallback)
 
@@ -372,8 +372,8 @@ function WeaponService:KnitStart()
 end
 
 
-function WeaponService:KnitInit()
-    RagdollService = Knit.GetService("RagdollService")
+function WeaponService:FrameworkInit()
+    RagdollService = Framework.GetService("RagdollService")
 end
 
 

@@ -7,9 +7,9 @@ local RS = game:GetService("ReplicatedStorage")
 local emoteAnimFolder = game:GetService("ServerStorage").EmoteAnims :: Folder
 local emoteSoundFolder = SoundService:FindFirstChild("Emotes") :: SoundGroup
 
-local Knit = require(RS.Framework.Internal.Packages.Knit)
+local Framework = require(RS.Framework.Internal.Kuro)
 
-local EmoteService = Knit.CreateService {
+local EmoteService = Framework.CreateService {
     Name = "EmoteService",
     Client = {},
 }
@@ -63,12 +63,12 @@ function EmoteService.Client:PlayEmote(player : Player, emoteName : string)
     end
 end
 
-function EmoteService:KnitStart()
+function EmoteService:FrameworkStart()
     
 end
 
 
-function EmoteService:KnitInit()
+function EmoteService:FrameworkInit()
     Players.PlayerAdded:Connect(function(player)
         DSCache[player.UserId] = {Coco = true}
     end)

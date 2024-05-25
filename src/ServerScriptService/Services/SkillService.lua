@@ -2,11 +2,11 @@ local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local RS = game:GetService("ReplicatedStorage")
-local Knit = require(RS.Framework.Internal.Packages.Knit)
+local Framework = require(RS.Framework.Internal.Kuro)
 
 local skillModule = require(RS.Framework.Modules.SkillsModule)
 
-local SkillService = Knit.CreateService {
+local SkillService = Framework.CreateService {
     Name = "SkillService";
     Client = {}
 }
@@ -108,7 +108,7 @@ local function playerAddedCallback(player : Player)
     end)
 end
 
-function SkillService:KnitStart()
+function SkillService:FrameworkStart()
     Players.PlayerAdded:Connect(playerAddedCallback)
     for _,player in game.Players:GetPlayers() do
         playerAddedCallback(player)
@@ -123,7 +123,7 @@ function SkillService:KnitStart()
 
 end
 
-function SkillService:KnitInit()
+function SkillService:FrameworkInit()
 end
 
 return SkillService

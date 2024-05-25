@@ -1,14 +1,13 @@
 local Players = game:GetService("Players")
 local RS = game:GetService("ReplicatedStorage")
-local SS = game:GetService("ServerStorage")
 
-local Knit = require(RS.Framework.Internal.Packages.Knit)
+local Framework = require(RS.Framework.Internal.Kuro)
 
+local frameworkOptions = {
+    DebugMode = true
+}
 
 warn("--- SERVER FRAMEWORK INITIALIZING ---")
--- Expose modules
-Knit.SharedStorage = RS.Framework.Storage
-Knit.ServerStorage = SS.Framework
 
 -- Only load modules in the services folder ending with "Service"
 for _,module in ipairs(script.Parent.Services:GetDescendants()) do
@@ -18,7 +17,6 @@ for _,module in ipairs(script.Parent.Services:GetDescendants()) do
     end
 end
 
-
-Knit.Start():andThen(function()
-    print("SERVER: Knit started")
+Framework.Start(frameworkOptions):andThen(function()
+    print("SERVER: Kuro started")
 end):catch(warn)

@@ -22,9 +22,9 @@ end
 
 -- Create Controller
 local RS = game:GetService("ReplicatedStorage")
-local Knit = require(RS.Framework.Internal.Packages.Knit)
+local Framework = require(RS.Framework.Internal.Kuro)
 
-local InputController = Knit.CreateController { Name = "InputController" }
+local InputController = Framework.CreateController { Name = "InputController" }
 
 -- Module References
 local SkillController
@@ -132,7 +132,7 @@ local function WeaponStatusUIUpdate(deltaTime)
 end
 
 
-function InputController:KnitStart()
+function InputController:FrameworkStart()
     game:GetService("StarterGui"):SetCoreGuiEnabled(Enum.CoreGuiType.Backpack,false)
     UIS.InputBegan:Connect(UISInputBeganCallback)
 
@@ -140,10 +140,9 @@ function InputController:KnitStart()
     local weaponStatusUIUpdateHandle = RunService.RenderStepped:Connect(WeaponStatusUIUpdate)
 end
 
-function InputController:KnitInit()
-    SkillController = Knit.GetController("SkillController")
-    WeaponService = Knit.GetService("WeaponService")
-    --print("InputController KnitInit")
+function InputController:FrameworkInit()
+    SkillController = Framework.GetController("SkillController")
+    WeaponService = Framework.GetService("WeaponService")
 end
 
 return InputController

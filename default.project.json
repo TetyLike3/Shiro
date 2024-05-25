@@ -8,13 +8,15 @@
             "Framework": {
                 "$className": "Folder",
                 "Internal": {
-                    "$className": "Folder",
-                    "Packages": {
-                        "$path": "Packages"
-                    }
+                    "$path": "src/ReplicatedStorage/Internal"
                 },
                 "Modules": {
-                    "$path": "src/ReplicatedStorage/Modules"
+                    "$path": "src/ReplicatedStorage/Modules",
+                    "$ignoreUnknownInstances": true
+                },
+                "Storage": {
+                    "$path": "src/ReplicatedStorage/Storage",
+                    "$ignoreUnknownInstances": true
                 }
             }
         },
@@ -22,7 +24,8 @@
         "ServerScriptService": {
             "$className": "ServerScriptService",
             "Framework": {
-                "$path": "src/ServerScriptService"
+                "$path": "src/ServerScriptService",
+                "$ignoreUnknownInstances": true
             }
         },
 
@@ -31,7 +34,8 @@
             "StarterPlayerScripts": {
                 "$className": "StarterPlayerScripts",
                 "Framework": {
-                    "$path": "src/StarterPlayerScripts"
+                    "$path": "src/StarterPlayerScripts",
+                    "$ignoreUnknownInstances": true
                 }
             }
         }

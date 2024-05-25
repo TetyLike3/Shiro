@@ -21,9 +21,9 @@ end
 
 -- Create Controller
 local RS = game:GetService("ReplicatedStorage")
-local Knit = require(RS.Framework.Internal.Packages.Knit)
+local Framework = require(RS.Framework.Internal.Kuro)
 
-local SkillController = Knit.CreateController { Name = "SkillController" }
+local SkillController = Framework.CreateController { Name = "SkillController" }
 
 -- Module References
 local skillModule = require(RS.Framework.Modules.SkillsModule)
@@ -123,7 +123,7 @@ local function SlotUIUpdate(deltaTime)
 end
 
 
-function SkillController:KnitStart()
+function SkillController:FrameworkStart()
     -- Register skills (for debugging)
     self:RegisterSkill("Sonido")
     self:RegisterSkill("Hop")
@@ -134,9 +134,8 @@ function SkillController:KnitStart()
     local slotUIUpdateHandle = RunService.RenderStepped:Connect(SlotUIUpdate)
 end
 
-function SkillController:KnitInit()
-    SkillService = Knit.GetService("SkillService")
-    --print("SkillController KnitInit")
+function SkillController:FrameworkInit()
+    SkillService = Framework.GetService("SkillService")
 end
 
 return SkillController
