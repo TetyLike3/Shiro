@@ -4,7 +4,7 @@ local events = RS.Framework.Storage:WaitForChild("Events",5)
 local Framework = require(RS.Framework.Internal.Kuro)
 
 local frameworkOptions = {
-    DebugMode = true
+    DebugMode = false
 }
 
 events.Framework_Init.Event:Wait()
@@ -23,5 +23,5 @@ events.Framework_ModuleLoading:Fire("__EOF")
 events.LoadingScreenClosing.Event:Wait()
 
 Framework.Start(frameworkOptions):andThen(function()
-    print("CLIENT: Knit started")
+    print("CLIENT: Kuro started")
 end):catch(warn)

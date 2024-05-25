@@ -14,7 +14,7 @@ local RagdollService
 
 -- Prevent module from loading server-side features on the client
 if game:GetService("RunService"):IsServer() then
-    StorageFolder = ServerStorage.Framework:WaitForChild("Skills") :: Folder
+    StorageFolder = Framework.ServerStorage:WaitForChild("Skills") :: Folder
     VFXFolder = StorageFolder._VFX :: Folder
 
     -- Get required services

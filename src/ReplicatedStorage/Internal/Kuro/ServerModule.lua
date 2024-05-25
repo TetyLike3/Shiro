@@ -18,7 +18,7 @@ end
 local ServerModule = {}
 ServerModule.Util = script.Parent.Parent.Util :: Folder
 ServerModule.SharedStorage = game:GetService("ReplicatedStorage").Framework.Storage :: Folder
-ServerModule.Storage = game:GetService("ServerStorage").Framework :: Folder
+ServerModule.ServerStorage = game:GetService("ServerStorage").Framework :: Folder
 
 local SIGNAL_MARKER = newproxy(true)
 getmetatable(SIGNAL_MARKER).__tostring = function()
