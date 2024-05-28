@@ -16,9 +16,22 @@ end
 
 
 local ServerModule = {}
-ServerModule.Util = script.Parent.Parent.Util :: Folder
+ServerModule.Util = script.Parent.Parent.Util
 ServerModule.SharedStorage = game:GetService("ReplicatedStorage").Framework.Storage :: Folder
 ServerModule.ServerStorage = game:GetService("ServerStorage").Framework :: Folder
+ServerModule.TempStorage = ServerModule.SharedStorage:FindFirstChild("Temp") :: Folder
+
+if not ServerModule.TempStorage then
+    local tempFolder = Instance.new("Folder")
+    tempFolder.Name = "Temp"
+    tempFolder.Parent = ServerModule.SharedStorage
+    ServerModule.TempStorage = tempFolder
+end
+if not ServerModule.TempStorage:FindFirstChild("AttachmentParent") then
+    local attachmentParent = Instance.new("Part")
+    attachmentParent.Name = "AttachmentParent"
+    attachmentParent.Parent = ServerModule.TempStorage
+end
 
 local SIGNAL_MARKER = newproxy(true)
 getmetatable(SIGNAL_MARKER).__tostring = function()
@@ -41,6 +54,39 @@ serviceStorage.Name = "Services"
 local Promise = require(ServerModule.Util.Promise)
 local Comm = require(ServerModule.Util.Comm)
 local ServerComm = Comm.ServerComm
+local Types = require(ServerModule.Util.Types)
+
+function ServerModule:FireSoundFXEvent(fx : Instance, parent : Instance)
+    fx.Parent = ServerModule.TempStorage
+
+    local fxData : Types.FXSoundData = {
+        fxType = Types.FXTypes.Sound,
+        fxName = fx:GetFullName(),
+        fxParentName = parent:GetFullName()
+    }
+    ServerModule.FXEvent:FireAllClients(fxData)
+end
+function ServerModule:FireParticleFXEvent(fx : Instance, parent : Instance, emitOnce : boolean)
+    if fx:IsA("Attachment") then
+        fx.Parent = ServerModule.TempStorage.AttachmentParent
+    else
+        fx.Parent = ServerModule.TempStorage
+    end
+
+    local fxData : Types.FXParticleData = {
+        fxType = Types.FXTypes.Particle,
+        fxName = fx:GetFullName(),
+        fxParentName = parent:GetFullName(),
+        emitOnce = emitOnce
+    }
+    ServerModule.FXEvent:FireAllClients(fxData)
+end
+
+-- FX event
+local FXEvent = Instance.new("RemoteEvent")
+FXEvent.Name = "FXEvent"
+FXEvent.Parent = script.Parent
+ServerModule.FXEvent = FXEvent
 
 
 type ServiceDefinition = {

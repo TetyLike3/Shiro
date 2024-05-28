@@ -39,21 +39,6 @@ local RegisteredSkills : {skillModule.SkillType} = table.create(10,-1)
 --[          METHODS          ]--
 --[---------------------------]--
 
-local function fxEventCallback(inst : Instance, parent : Instance)
-    print("FX Event Received")
-    if inst:IsA("Sound") then
-        inst = inst :: Sound
-        inst.Parent = parent
-        inst:Play()
-        inst.Ended:Wait()
-        inst:Destroy()
-    end
-    if inst:IsA("Attachment") then
-        inst = inst :: Attachment
-        inst.Parent = parent
-    end
-end
-
 
 
 -- Registers a skill to the player's toolbar
@@ -91,11 +76,6 @@ function SkillController:UseSkill(skillIndex)
     local success, registeredSkills = SkillService:UseSkillSlot(skillIndex, skillInputData):await()
     if not success then warn("Promise to use skill failed") return end
     RegisteredSkills = registeredSkills -- Update toolbar data
-
-    -- Check for FX event
-    if skill.FXEvent then
-        skill.FXEvent.OnClientEvent:Connect(fxEventCallback)
-    end
 end
 
 

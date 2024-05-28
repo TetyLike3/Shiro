@@ -41,16 +41,6 @@ local heavyAttackCooldownEndTimestamp = 0
 --[          METHODS          ]--
 --[---------------------------]--
 
-local function fxEventCallback(inst : Instance, parent : Instance)
-    if inst:IsA("Sound") then
-        inst = inst :: Sound
-        inst.Parent = parent
-        inst:Play()
-        inst.Ended:Wait()
-        inst:Destroy()
-    end
-end
-
 -- Callback for when a user input is detected
 local function UISInputBeganCallback(inputObject : InputObject, gameProcessedEvent)
     if gameProcessedEvent then return end
@@ -77,15 +67,13 @@ local function UISInputBeganCallback(inputObject : InputObject, gameProcessedEve
     elseif inputObject.KeyCode == Enum.KeyCode.E then
         WeaponService:ToggleWeapon()
     elseif inputObject.UserInputType == Enum.UserInputType.MouseButton1 then -- M1 Attack
-        local success, cooldownEndTimestamp, fxEvent = WeaponService:LightAttack():await()
+        local success, cooldownEndTimestamp = WeaponService:LightAttack():await()
         if not success then warn("Failed to perform light attack") end
         lightAttackCooldownEndTimestamp = cooldownEndTimestamp
-        if fxEvent then fxEvent.OnClientEvent:Connect(fxEventCallback) end
     elseif inputObject.UserInputType == Enum.UserInputType.MouseButton2 then -- M2 Attack
-        local success, cooldownEndTimestamp, fxEvent = WeaponService:HeavyAttack():await()
+        local success, cooldownEndTimestamp = WeaponService:HeavyAttack():await()
         if not success then warn("Failed to perform heavy attack") end
         heavyAttackCooldownEndTimestamp = cooldownEndTimestamp
-        if fxEvent then fxEvent.OnClientEvent:Connect(fxEventCallback) end
     end
 end
 
@@ -110,9 +98,9 @@ local function WeaponStatusUIUpdate(deltaTime)
     -- Toggle UI based on weapon presence
     if not weapon then
         if statusUI.Visible then statusUI.Visible = false end
-        return
+    else
+        if not statusUI.Visible then statusUI.Visible = true end
     end
-    if not statusUI.Visible then statusUI.Visible = true end
 
     -- Update light attack cooldown
     if lightAttackCooldownEndTimestamp then

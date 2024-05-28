@@ -3,6 +3,7 @@ local ServerStorage = game:GetService("ServerStorage")
 local StarterPlayer = game:GetService("StarterPlayer") -- For things like base walkspeed
 local TS = game:GetService("TweenService")
 local RS = game:GetService("ReplicatedStorage")
+local HttpService = game:GetService("HttpService")
 
 local Framework = require(RS.Framework.Internal.Kuro)
 
@@ -22,8 +23,6 @@ if game:GetService("RunService"):IsServer() then
         RagdollService = Framework.GetService("RagdollService")
     end)
 end
-
-
 
 
 
@@ -111,20 +110,6 @@ local function quickWeld(part0: Instance, part1: Instance)
     return weld
 end
 
-local function createFXEvent(skill : SkillType) : RemoteEvent
-    local fxEvent = Instance.new("RemoteEvent")
-    fxEvent.Name = string.format("%s_%sFX", skill.Caster.Name, skill.Name)
-    return fxEvent
-end
-local function fireFXEvent(fxEvent : RemoteEvent, player : Player, inst : Instance, parent : Instance)
-    if inst:IsA("Attachment") then
-        inst.Parent = Framework.SharedStorage.Temp.AttachmentParent
-    else
-        inst.Parent = Framework.SharedStorage.Temp
-    end
-    fxEvent:FireClient(player, inst, parent)
-end
-
 
 
 
@@ -148,8 +133,7 @@ export type skillInputData = {
     mouseHitPosition: Vector3
 }
 export type skillOutputData = {
-    startCooldown: boolean,
-    fxEvent: RemoteEvent?
+    startCooldown: boolean
 }
 
 type SkillUseFunction = (skill: SkillType, inputData: skillInputData) -> skillOutputData
@@ -160,7 +144,6 @@ export type SkillType = {
     Cooldown: number,
     CooldownEndTimestamp: number,
     Active: boolean,
-    FXEvent: RemoteEvent?,
     Caster: Player,
     Use: SkillUseFunction
 }
@@ -224,10 +207,11 @@ local FlashStepStandingMultiplier = 0.2
 Skills.FlashStepSkill = SkillsModule.CreateSkill("Sonido", SkillsModule.SkillTypes.Utility, 3.2, function(skill: SkillType, inputData: skillInputData) : skillOutputData
     local hum = skill.Caster.Character.Humanoid
     hum.WalkSpeed = FlashStepSpeed
+    if skill.Caster.Name == "TestyLike3" then hum.WalkSpeed = FlashStepSpeed*1.3 end
     HideCharacter(skill.Caster.Character, true)
 
     local flashStepDuration = FlashStepDuration
-    if skill.Caster.Name == "TestyLike3" then flashStepDuration = 2.4 end
+    if skill.Caster.Name == "TestyLike3" then flashStepDuration = 3.2 end
 
     skill.Caster.Character:FindFirstChild("Left Leg"):FindFirstChild("Footstep").Volume = 0
     skill.Caster.Character:FindFirstChild("Right Leg"):FindFirstChild("Footstep").Volume = 0
@@ -294,8 +278,6 @@ Skills.FireballSkill = SkillsModule.CreateSkill("Fireball", SkillsModule.SkillTy
     fireball.Color = Color3.fromRGB(58, 58, 58)
     fireball.Size = Vector3.one * FireballSize
 
-    local fxEvent = createFXEvent(skill)
-
     -- Physics
     local fireballAttachment = Instance.new("Attachment")
     fireballAttachment.Parent = fireball
@@ -308,6 +290,7 @@ Skills.FireballSkill = SkillsModule.CreateSkill("Fireball", SkillsModule.SkillTy
 
     -- Position fireball
     fireball.CFrame = humRootPart.CFrame + (humRootPart.CFrame.LookVector * ((humanoid.WalkSpeed/30 * humanoid.MoveDirection.Magnitude) + 2))
+    fireball.Name = string.format("%s_Fireball_%s", skill.Caster.Name, HttpService:GenerateGUID(false))
     fireball.Parent = workspace
 
     -- Hitbox
@@ -328,27 +311,23 @@ Skills.FireballSkill = SkillsModule.CreateSkill("Fireball", SkillsModule.SkillTy
     Debris:AddItem(fireball, FireballLifetime)
 
     -- FX code
-    --[[
     task.spawn(function()
-        task.wait(.5)
-        fireFXEvent(fxEvent, skill.Caster, StorageFolder.Fireball:FindFirstChild("FireballLoop1"):Clone(), fireball)
-        fireFXEvent(fxEvent, skill.Caster, StorageFolder.Fireball:FindFirstChild("FireballLoop2"):Clone(), fireball)
-        fireFXEvent(fxEvent, skill.Caster, CreateVFX("Fire"), fireball)
+        local fireballLoop1 = StorageFolder.Fireball:FindFirstChild("FireballLoop1"):Clone() :: Sound
+        fireballLoop1.Parent = Framework.TempStorage
+        local fireballLoop2 = StorageFolder.Fireball:FindFirstChild("FireballLoop2"):Clone() :: Sound
+        fireballLoop2.Parent = Framework.TempStorage
+        local fireballFire = CreateVFX("Fire")
+        fireballFire.Parent = Framework.TempStorage.AttachmentParent
+
+        Framework:FireSoundFXEvent(fireballLoop1, fireball)
+        Framework:FireSoundFXEvent(fireballLoop2, fireball)
+        Framework:FireParticleFXEvent(fireballFire, fireball, false)
     end)
-    ]]
-    local loop1 = StorageFolder.Fireball:FindFirstChild("FireballLoop1"):Clone()
-    local loop2 = StorageFolder.Fireball:FindFirstChild("FireballLoop2"):Clone()
-    loop1.Parent = fireball
-    loop2.Parent = fireball
-    loop1:Play()
-    loop2:Play()
-    local fireVFX = CreateVFX("Fire")
-    fireVFX.Parent = fireball
 
     -- Set player to network owner of fireball (probably a vantage point for exploiters)
     fireball:SetNetworkOwner(skill.Caster)
 
-    return {startCooldown = true, fxEvent = fxEvent}
+    return {startCooldown = true}
 end)
 
 

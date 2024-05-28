@@ -129,16 +129,6 @@ local function spawnHitbox(hitbox : Model, player : Player) : Model
     hitboxClone.Parent = player.Character
     return hitboxClone
 end
-local function createFXEvent(name)
-    local fxEvent = Instance.new("RemoteEvent")
-    fxEvent.Name = name
-    fxEvent.Parent = Framework.SharedStorage.Events
-    return fxEvent
-end
-local function fireFXEvent(fxEvent : RemoteEvent, player : Player, inst : Instance, parent : Instance)
-    inst.Parent = Framework.SharedStorage.Temp
-    fxEvent:FireClient(player, inst, parent)
-end
 
 
 
@@ -219,16 +209,12 @@ function WeaponService.Client:LightAttack(player : Player) : (number, RemoteEven
     playerEntry.lightAttackAnimationIndex += 1
     if playerEntry.lightAttackAnimationIndex > #playerEntry.lightAttackAnimations then playerEntry.lightAttackAnimationIndex = 1 end
 
-    -- Create client-side FX event
-    local fxEvent = createFXEvent(string.format("%s_M1FX",player.Name))
-
     -- Start light attack
     local animationEntry = playerEntry.lightAttackAnimations[playerEntry.lightAttackAnimationIndex]
     playerEntry.state = PlayerWeaponStates.Attacking
 
     -- Swing sound
-    fireFXEvent(fxEvent, player, animationEntry.swingSound:Clone(), weapon.Handle)
-    -- Hit sound
+    Framework:FireSoundFXEvent(animationEntry.swingSound:Clone(), weapon.Handle)
 
     -- Hitbox
     local hitRigs = {}
@@ -247,7 +233,7 @@ function WeaponService.Client:LightAttack(player : Player) : (number, RemoteEven
             hit.Parent:FindFirstChild("Humanoid"):TakeDamage(weapon:GetAttribute("LightAttackDamage"))
             table.insert(hitRigs,hit.Parent)
             if not hitSoundPlayed then
-                fireFXEvent(fxEvent, player, animationEntry.hitSound:Clone(), weapon.Handle)
+                Framework:FireSoundFXEvent(animationEntry.hitSound:Clone(), weapon.Handle)
             end
         end)
     end)
@@ -262,17 +248,15 @@ function WeaponService.Client:LightAttack(player : Player) : (number, RemoteEven
         -- Play miss sound if no hit sound was played
         if weapon and weapon.Handle then
             if not hitSoundPlayed then
-                fireFXEvent(fxEvent, player, animationEntry.missSound:Clone(), weapon.Handle)
+                Framework:FireSoundFXEvent(animationEntry.missSound:Clone(), weapon.Handle)
             end
         end
-
-        fxEvent:Destroy()
     end)
     animationEntry.track:Play(0.01,animWeight)
 
     -- Return early to pass cooldown timestamp to client
     playerEntry.lightAttackCooldownEndTimestamp = getTimestamp() + animationEntry.track.Length
-    return playerEntry.lightAttackCooldownEndTimestamp, fxEvent
+    return playerEntry.lightAttackCooldownEndTimestamp
 end
 
 -- Send an M2 input to the server
@@ -284,17 +268,13 @@ function WeaponService.Client:HeavyAttack(player : Player) : (number, RemoteEven
     if not weapon then return end
     if not isCooldownEnded(playerEntry.heavyAttackCooldownEndTimestamp) then return playerEntry.heavyAttackCooldownEndTimestamp end
 
-    -- Create client-side FX event
-    local fxEvent = createFXEvent(string.format("%s_M2FX",player.Name))
-
     -- Start heavy attack
     local animationEntry = playerEntry.heavyAttackAnimation
     playerEntry.heavyAttackCooldownEndTimestamp = getTimestamp() + weapon:GetAttribute("HeavyAttackCooldown") + animationEntry.track.Length
     playerEntry.state = PlayerWeaponStates.Attacking
 
     -- Swing sound
-    fireFXEvent(fxEvent, player, animationEntry.swingSound:Clone(), weapon.Handle)
-    -- Hit sound
+    Framework:FireSoundFXEvent(animationEntry.swingSound:Clone(), weapon.Handle)
 
     -- Hitbox
     local hitRigs = {}
@@ -314,7 +294,7 @@ function WeaponService.Client:HeavyAttack(player : Player) : (number, RemoteEven
             RagdollService:RagdollRig(hit.Parent, 1, player.Character.HumanoidRootPart.CFrame.Position, 200)
             table.insert(hitRigs,hit.Parent)
             if not hitSoundPlayed then
-                fireFXEvent(fxEvent, player, animationEntry.hitSound:Clone(), weapon.Handle)
+                Framework:FireSoundFXEvent(animationEntry.hitSound:Clone(), weapon.Handle)
                 hitSoundPlayed = true
             end
         end)
@@ -331,14 +311,13 @@ function WeaponService.Client:HeavyAttack(player : Player) : (number, RemoteEven
         -- Play miss sound if no hit sound was played
         if weapon and weapon.Handle then
             if not hitSoundPlayed then
-                fireFXEvent(fxEvent, player, animationEntry.missSound:Clone(), weapon.Handle)
+                Framework:FireSoundFXEvent(animationEntry.missSound:Clone(), weapon.Handle)
             end
         end
-        fxEvent:Destroy()
     end)
 
     -- Return early to pass cooldown timestamp to client
-    return playerEntry.heavyAttackCooldownEndTimestamp, fxEvent
+    return playerEntry.heavyAttackCooldownEndTimestamp
 end
 
 

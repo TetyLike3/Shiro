@@ -15,16 +15,67 @@ local function debugPrint(...)
         print(`KURO_DEBUG: {...}`)
     end
 end
+local function getObject(fullName : string) : Instance
+	local segments = fullName:split(".")
+	local current = game
+
+	for _,location in pairs(segments) do
+		if not current:FindFirstChild(location) then
+			return nil
+		end
+		current = current[location]
+	end
+
+	return current
+end
 
 local ClientModule = {}
 ClientModule.Player = game:GetService("Players").LocalPlayer
-ClientModule.Util = script.Parent.Parent.Util :: Folder
+ClientModule.Util = script.Parent.Parent.Util
 ClientModule.SharedStorage = game:GetService("ReplicatedStorage").Framework.Storage :: Folder
 
 local Promise = require(ClientModule.Util.Promise)
 local Comm = require(ClientModule.Util.Comm)
 local ClientComm = Comm.ClientComm
+local Types = require(ClientModule.Util.Types)
 
+
+-- FX event
+local FXEvent = script.Parent:WaitForChild("FXEvent") :: RemoteEvent
+ClientModule.FXEvent = FXEvent
+
+FXEvent.OnClientEvent:Connect(function(fxData : Types.FXDefaultData)
+	local inst = getObject(fxData.fxName)
+	if not inst then return end
+	local parent = getObject(fxData.fxParentName)
+	if not parent then return end
+
+	if (fxData.fxType == Types.FXTypes.Sound) then
+		fxData = fxData :: Types.FXSoundData
+		inst = inst :: Sound
+		inst.Parent = parent
+		inst:Play()
+        inst.Ended:Wait()
+        inst:Destroy()
+	elseif (fxData.fxType == Types.FXTypes.Particle) then
+		fxData = fxData :: Types.FXParticleData
+		inst = inst :: Attachment
+		inst.Parent = parent
+		if fxData.emitOnce then
+			for _, emitter in inst:GetDescendants() do
+				if emitter:IsA("ParticleEmitter") then
+					emitter:Emit(1)
+				end
+			end
+		else
+			for _, emitter in inst:GetDescendants() do
+				if emitter:IsA("ParticleEmitter") then
+					emitter.Enabled = true
+				end
+			end
+		end
+	end
+end)
 
 type ControllerDefinition = {
 	Name: string,
