@@ -1,5 +1,3 @@
--- TODO: :3
-
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local RS = game:GetService("ReplicatedStorage")
@@ -199,7 +197,7 @@ end
 
 
 
-local animWeight = .5
+local animWeight = 1
 -- Toggles the weapon's presence on the player, and loads/unloads animations for the weapon
 function CombatService.Client:ToggleWeapon(player : Player)
     if not player.Character then return end
@@ -315,7 +313,7 @@ function CombatService.Client:LightAttack(player : Player) : (number, RemoteEven
             end
         end
     end)
-    animationEntry.track:Play(0.01,animWeight)
+    animationEntry.track:Play(0.001,animWeight)
 
     -- Return early to pass cooldown timestamp to client
     playerEntry.lightAttackCooldownEndTimestamp = getTimestamp() + animationEntry.track.Length
@@ -404,6 +402,14 @@ local function playerAddedCallback(player : Player)
         leftStepSound.Parent = character:FindFirstChild("Left Leg")
         local rightStepSound = footstepSound:Clone()
         rightStepSound.Parent = character:FindFirstChild("Right Leg")
+
+        -- Ragdoll on death :3
+        character.Humanoid.BreakJointsOnDeath = false
+        character.Humanoid.Died:Once(function()
+            leftStepSound:Destroy()
+            rightStepSound:Destroy()
+            RagdollService:RagdollRig(character, 60, character.HumanoidRootPart.CFrame.Position, 0)
+        end)
     end)
 
     playerWeapons[player.UserId] = {

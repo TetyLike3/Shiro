@@ -96,6 +96,8 @@ function RagdollService:RagdollRig(rig : Model, duration : number, impulseOrigin
 
         task.wait(duration)
 
+        if (not humanoid) or (not humRootPart) then return end
+
         -- Revert parts back to their original collision groups
         for part,data in partsCollisionGroups do
             part.CanCollide = data.cancollide

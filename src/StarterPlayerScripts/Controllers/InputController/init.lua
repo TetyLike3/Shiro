@@ -120,12 +120,27 @@ local function WeaponStatusUIUpdate(deltaTime)
 end
 
 
+local function characterAddedCallback(character)
+    lightAttackCooldownEndTimestamp = 0
+    heavyAttackCooldownEndTimestamp = 0
+
+    local animateScript = script.Animate:Clone()
+    local oldAnimateScript = character:FindFirstChild("Animate")
+    if oldAnimateScript then oldAnimateScript:Destroy() end
+    animateScript.Parent = character
+    animateScript.Enabled = true
+end
+
 function InputController:FrameworkStart()
     game:GetService("StarterGui"):SetCoreGuiEnabled(Enum.CoreGuiType.Backpack,false)
     UIS.InputBegan:Connect(UISInputBeganCallback)
 
     getStatusUI().Enabled = true
     local weaponStatusUIUpdateHandle = RunService.RenderStepped:Connect(WeaponStatusUIUpdate)
+
+    Players.LocalPlayer.CharacterAdded:Connect(characterAddedCallback)
+    local char = Players.LocalPlayer.Character
+    if char then characterAddedCallback(char) end
 end
 
 function InputController:FrameworkInit()
