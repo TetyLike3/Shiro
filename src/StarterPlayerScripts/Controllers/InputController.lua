@@ -28,7 +28,7 @@ local InputController = Framework.CreateController { Name = "InputController" }
 
 -- Module References
 local SkillController
-local WeaponService
+local CombatService
 
 -- Controller Variables
 local lightAttackCooldownEndTimestamp = 0
@@ -65,13 +65,13 @@ local function UISInputBeganCallback(inputObject : InputObject, gameProcessedEve
     elseif inputObject.KeyCode == Enum.KeyCode.G then
         SkillController:UseSkill(10)
     elseif inputObject.KeyCode == Enum.KeyCode.E then
-        WeaponService:ToggleWeapon()
+        CombatService:ToggleWeapon()
     elseif inputObject.UserInputType == Enum.UserInputType.MouseButton1 then -- M1 Attack
-        local success, cooldownEndTimestamp = WeaponService:LightAttack():await()
+        local success, cooldownEndTimestamp = CombatService:LightAttack():await()
         if not success then warn("Failed to perform light attack") end
         lightAttackCooldownEndTimestamp = cooldownEndTimestamp
     elseif inputObject.UserInputType == Enum.UserInputType.MouseButton2 then -- M2 Attack
-        local success, cooldownEndTimestamp = WeaponService:HeavyAttack():await()
+        local success, cooldownEndTimestamp = CombatService:HeavyAttack():await()
         if not success then warn("Failed to perform heavy attack") end
         heavyAttackCooldownEndTimestamp = cooldownEndTimestamp
     end
@@ -130,7 +130,7 @@ end
 
 function InputController:FrameworkInit()
     SkillController = Framework.GetController("SkillController")
-    WeaponService = Framework.GetService("WeaponService")
+    CombatService = Framework.GetService("CombatService")
 end
 
 return InputController

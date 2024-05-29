@@ -27,7 +27,7 @@ local SkillController = Framework.CreateController { Name = "SkillController" }
 
 -- Module References
 local skillModule = require(RS.Framework.Modules.SkillsModule)
-local SkillService
+local CombatService
 
 -- Controller Variables
 local RegisteredSkills : {skillModule.SkillType} = table.create(10,-1)
@@ -44,7 +44,7 @@ local RegisteredSkills : {skillModule.SkillType} = table.create(10,-1)
 -- Registers a skill to the player's toolbar
 function SkillController:RegisterSkill(skillName: string)
     -- Send register request to server
-    local success, registeredSkills = SkillService:RegisterSkill(skillName):await()
+    local success, registeredSkills = CombatService:RegisterSkill(skillName):await()
     if not success then warn("Promise to register skill failed") return end
     RegisteredSkills = registeredSkills -- Update toolbar data
 
@@ -73,7 +73,7 @@ function SkillController:UseSkill(skillIndex)
     }
 
     -- Send use request to server
-    local success, registeredSkills = SkillService:UseSkillSlot(skillIndex, skillInputData):await()
+    local success, registeredSkills = CombatService:UseSkillSlot(skillIndex, skillInputData):await()
     if not success then warn("Promise to use skill failed") return end
     RegisteredSkills = registeredSkills -- Update toolbar data
 end
@@ -115,7 +115,7 @@ function SkillController:FrameworkStart()
 end
 
 function SkillController:FrameworkInit()
-    SkillService = Framework.GetService("SkillService")
+    CombatService = Framework.GetService("CombatService")
 end
 
 return SkillController
