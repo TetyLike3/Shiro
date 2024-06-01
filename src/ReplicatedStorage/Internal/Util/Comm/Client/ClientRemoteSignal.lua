@@ -32,23 +32,20 @@ end
 	fired at this specific client that created this client signal.
 ]=]
 function ClientRemoteSignal:Connect(fn: (...any) -> ())
-	return self._signal:Connect(fn)
+	return self._remoteEvent.OnClientEvent:Connect(fn)
 end
 
 --[=[
 	Fires the equivalent server-side signal with the given arguments.
 ]=]
 function ClientRemoteSignal:Fire(...: any)
-	self._re:FireServer(...)
+	self._remoteEvent:FireServer(...)
 end
 
 --[=[
 	Destroys the ClientRemoteSignal object.
 ]=]
 function ClientRemoteSignal:Destroy()
-	if self._signal then
-		self._signal:Destroy()
-	end
 end
 
 return ClientRemoteSignal

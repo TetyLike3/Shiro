@@ -81,9 +81,8 @@ end
 
 
 --[---------------------------]--
---[        KNIT METHODS       ]--
+--[     FRAMEWORK METHODS     ]--
 --[---------------------------]--
-
 
 -- Updates SlotUI
 local function SlotUIUpdate(deltaTime)

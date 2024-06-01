@@ -385,7 +385,7 @@ function CombatService.Client:HeavyAttack(player : Player) : (number, RemoteEven
 end
 
 --[---------------------------]--
---[        KNIT METHODS       ]--
+--[     FRAMEWORK METHODS     ]--
 --[---------------------------]--
 
 
