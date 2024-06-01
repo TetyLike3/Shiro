@@ -14,7 +14,25 @@ local CombatService = Framework.CreateService {
 local RagdollService
 
 -- Assigns a table of equipped skills to each player's userId
-local PlayerRegistry : {[number]: {registeredSkills: {skillModule.SkillType}}} = {}
+-- Also assigns a weapon name and state to each player's userId
+local PlayerRegistry : {
+    [number]: {
+        registeredSkills: {skillModule.SkillType},
+        skillOverrides: {[string]: any},
+        weaponData: {
+            weaponName: string,
+            state: string,
+            lightAttackCooldownEndTimestamp: number,
+            heavyAttackCooldownEndTimestamp: number,
+            parryCooldownEndTimestamp: number,
+            lightAttackAnimations: {{track: AnimationTrack} & weaponAnimationSounds},
+            lightAttackAnimationIndex : number,
+            lightAttackHitboxes : {Model},
+            heavyAttackAnimation: ({track: AnimationTrack} & weaponAnimationSounds),
+            heavyAttackHitbox : Model,
+        }
+    }
+} = {}
 
 local PVPZones = workspace:WaitForChild("PVPZones"):GetChildren()
 
@@ -27,21 +45,6 @@ local PlayerWeaponStates = {
 }
 
 type weaponAnimationSounds = {swingSound: Sound, hitSound: Sound, missSound: Sound}
--- Assigns a weapon name and state to each player's userId
-local playerWeapons : {
-    [number]: {
-        weaponName: string,
-        state: string,
-        lightAttackCooldownEndTimestamp: number,
-        heavyAttackCooldownEndTimestamp: number,
-        parryCooldownEndTimestamp: number,
-        lightAttackAnimations: {{track: AnimationTrack} & weaponAnimationSounds},
-        lightAttackAnimationIndex : number,
-        lightAttackHitboxes : {Model},
-        heavyAttackAnimation: ({track: AnimationTrack} & weaponAnimationSounds),
-        heavyAttackHitbox : Model,
-    }
-} = {}
 
 
 --[---------------------------]--
@@ -67,14 +70,14 @@ local function isCooldownEnded(timestamp : number) : boolean
     return getTimestamp() >= timestamp
 end
 local function getWeaponCopy(player : Player) : Model
-    if not playerWeapons[player.UserId] then return end
-    local weapon = Framework.ServerStorage.Weapons.Tools:FindFirstChild(playerWeapons[player.UserId].weaponName)
-    if not weapon then warn(string.format("CRITICAL: Weapon %s does not exist in storage for user %s (%s)",playerWeapons[player.UserId].weaponName,player.Name,player.UserId)) return nil end
+    if not PlayerRegistry[player.UserId].weaponData then return end
+    local weapon = Framework.ServerStorage.Weapons.Tools:FindFirstChild(PlayerRegistry[player.UserId].weaponData.weaponName)
+    if not weapon then warn(string.format("CRITICAL: Weapon %s does not exist in storage for user %s (%s)",PlayerRegistry[player.UserId].weaponData.weaponName,player.Name,player.UserId)) return nil end
     return weapon
 end
 local function getWeaponOnPlayer(player : Player) : Model
     if not player.Character then return end
-    return player.Character:FindFirstChild(playerWeapons[player.UserId].weaponName)
+    return player.Character:FindFirstChild(PlayerRegistry[player.UserId].weaponData.weaponName)
 end
 local function getWeaponAnimations(weaponName : string) : {lightAttacks: {{track: Animation} & weaponAnimationSounds}, heavyAttack: {track: Animation} & weaponAnimationSounds}
     local weaponAnims = Framework.ServerStorage.Weapons.Animations:FindFirstChild(weaponName)
@@ -201,18 +204,18 @@ local animWeight = 1
 -- Toggles the weapon's presence on the player, and loads/unloads animations for the weapon
 function CombatService.Client:ToggleWeapon(player : Player)
     if not player.Character then return end
-    if not playerWeapons[player.UserId] then return end
-    if playerWeapons[player.UserId].state ~= PlayerWeaponStates.Idle then return end
+    if not PlayerRegistry[player.UserId].weaponData then return end
+    if PlayerRegistry[player.UserId].weaponData.state ~= PlayerWeaponStates.Idle then return end
 
     local weaponOnPlayer = getWeaponOnPlayer(player)
     if weaponOnPlayer then
         weaponOnPlayer:Destroy()
 
         -- Unload animations for weapon
-        for _,anim in playerWeapons[player.UserId].lightAttackAnimations do
+        for _,anim in PlayerRegistry[player.UserId].weaponData.lightAttackAnimations do
             anim.track:Destroy()
         end
-        playerWeapons[player.UserId].heavyAttackAnimation.track:Destroy()
+        PlayerRegistry[player.UserId].weaponData.heavyAttackAnimation.track:Destroy()
         return
     else
         -- Load weapon onto player
@@ -227,7 +230,7 @@ function CombatService.Client:ToggleWeapon(player : Player)
 
         -- Load animations and sounds for weapon
         local animator : Animator = player.Character.Humanoid.Animator
-        local playerEntry = playerWeapons[player.UserId]
+        local playerEntry = PlayerRegistry[player.UserId].weaponData
         local entries = getWeaponAnimations(playerEntry.weaponName)
 
         for ind,entry in entries.lightAttacks do
@@ -254,7 +257,7 @@ local lightAttackComboTimeLimit = 0.1
 -- Send an M1 input to the server
 function CombatService.Client:LightAttack(player : Player) : (number, RemoteEvent)
     -- Sanity checks
-    local playerEntry = playerWeapons[player.UserId]
+    local playerEntry = PlayerRegistry[player.UserId].weaponData
     if not playerEntry then return end
     if playerEntry.state ~= PlayerWeaponStates.Idle then return end
     local weapon = getWeaponOnPlayer(player)
@@ -323,7 +326,7 @@ end
 -- Send an M2 input to the server
 function CombatService.Client:HeavyAttack(player : Player) : (number, RemoteEvent)
     -- Sanity checks
-    local playerEntry = playerWeapons[player.UserId]
+    local playerEntry = PlayerRegistry[player.UserId].weaponData
     if not playerEntry then return end
     local weapon = getWeaponOnPlayer(player)
     if not weapon then return end
@@ -412,7 +415,7 @@ local function playerAddedCallback(player : Player)
         end)
     end)
 
-    playerWeapons[player.UserId] = {
+    PlayerRegistry[player.UserId].weaponData = {
         weaponName = "Messer",
         state = PlayerWeaponStates.Idle,
         lightAttackAnimationTracks = {},
@@ -436,7 +439,6 @@ function CombatService:FrameworkStart()
             if part:IsA("BasePart") then part.CollisionGroup = "DummyRigs" end
         end
     end
-
 end
 
 function CombatService:FrameworkInit()
