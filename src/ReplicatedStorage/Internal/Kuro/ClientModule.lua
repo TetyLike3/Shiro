@@ -32,6 +32,7 @@ end
 local ClientModule = {}
 ClientModule.Player = game:GetService("Players").LocalPlayer
 ClientModule.Util = script.Parent.Parent.Util
+ClientModule.Common = require(ClientModule.Util.Common)
 ClientModule.SharedStorage = game:GetService("ReplicatedStorage").Framework.Storage :: Folder
 
 local Promise = require(ClientModule.Util.Promise)

@@ -17,6 +17,7 @@ end
 
 local ServerModule = {}
 ServerModule.Util = script.Parent.Parent.Util
+ServerModule.Common = require(ServerModule.Util.Common)
 ServerModule.SharedStorage = game:GetService("ReplicatedStorage").Framework.Storage :: Folder
 ServerModule.ServerStorage = game:GetService("ServerStorage").Framework :: Folder
 ServerModule.TempStorage = ServerModule.SharedStorage:FindFirstChild("Temp") :: Folder
