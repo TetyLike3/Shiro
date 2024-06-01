@@ -13,7 +13,7 @@ local VFXFolder
 local RagdollService
 
 
--- Prevent module from loading server-side features on the client
+--? Prevent module from loading server-side features on the client
 if game:GetService("RunService"):IsServer() then
     StorageFolder = Framework.ServerStorage:WaitForChild("Skills") :: Folder
     VFXFolder = StorageFolder._VFX :: Folder
@@ -110,6 +110,13 @@ local function quickWeld(part0: Instance, part1: Instance)
     return weld
 end
 
+local function applyOverride(overridesTable : {[string]: any}, variableName : string, defaultValue : any)
+    if overridesTable[variableName] ~= nil then
+        return overridesTable[variableName]
+    else
+        return defaultValue
+    end
+end
 
 
 
@@ -130,7 +137,8 @@ SkillsModule.SkillTypes = {
 
 -- Data that is passed to a skill when it is used
 export type skillInputData = {
-    mouseHitPosition: Vector3
+    mouseHitPosition: Vector3,
+    playerOverrides: {[string]: any},
 }
 export type skillOutputData = {
     startCooldown: boolean
@@ -181,7 +189,7 @@ function SkillsModule.CreateSkill(name: string, skillType: string, cooldown: num
 end
 
 
--- Return early if this module is required from the client
+--? Return early if this module is required from the client
 if game:GetService("RunService"):IsClient() then
     return SkillsModule
 end
@@ -205,13 +213,14 @@ local FlashStepStandingMultiplier = 0.2
 
 -- Skill code
 Skills.FlashStepSkill = SkillsModule.CreateSkill("Sonido", SkillsModule.SkillTypes.Utility, 3.2, function(skill: SkillType, inputData: skillInputData) : skillOutputData
-    local hum = skill.Caster.Character.Humanoid
-    hum.WalkSpeed = FlashStepSpeed
-    if skill.Caster.Name == "TestyLike3" then hum.WalkSpeed = FlashStepSpeed*1.3 end
-    HideCharacter(skill.Caster.Character, true)
+    local skillDuration = applyOverride(inputData.playerOverrides, "FlashStepDuration", FlashStepDuration)
+    local skillSpeed = applyOverride(inputData.playerOverrides, "FlashStepSpeed", FlashStepSpeed)
+    local skillShadowFrequency = applyOverride(inputData.playerOverrides, "FlashStepShadowFrequency", FlashStepShadowFrequency)
+    local skillStandingMultiplier = applyOverride(inputData.playerOverrides, "FlashStepStandingMultiplier", FlashStepStandingMultiplier)
 
-    local flashStepDuration = FlashStepDuration
-    if skill.Caster.Name == "TestyLike3" then flashStepDuration = 3.2 end
+    local hum = skill.Caster.Character.Humanoid
+    hum.WalkSpeed = skillSpeed
+    HideCharacter(skill.Caster.Character, true)
 
     skill.Caster.Character:FindFirstChild("Left Leg"):FindFirstChild("Footstep").Volume = 0
     skill.Caster.Character:FindFirstChild("Right Leg"):FindFirstChild("Footstep").Volume = 0
@@ -221,7 +230,7 @@ Skills.FlashStepSkill = SkillsModule.CreateSkill("Sonido", SkillsModule.SkillTyp
                 task.wait(.1)
             else
                 CreateCharacterShadow(skill.Caster.Character)
-                task.wait(FlashStepShadowFrequency)
+                task.wait(skillShadowFrequency)
             end
         until skill.Active == false
         skill.Caster.Character:FindFirstChild("Left Leg"):FindFirstChild("Footstep").Volume = .5
@@ -232,11 +241,11 @@ Skills.FlashStepSkill = SkillsModule.CreateSkill("Sonido", SkillsModule.SkillTyp
     repeat
         task.wait(0.1)
         if not isCharacterMoving(skill.Caster.Character) then
-            timeInFlashStep += 0.1*FlashStepStandingMultiplier
+            timeInFlashStep += 0.1*skillStandingMultiplier
         else
             timeInFlashStep += 0.1
         end
-    until timeInFlashStep >= flashStepDuration
+    until timeInFlashStep >= skillDuration
     hum.WalkSpeed = StarterPlayer.CharacterWalkSpeed
     task.wait(.2)
     HideCharacter(skill.Caster.Character, false)
