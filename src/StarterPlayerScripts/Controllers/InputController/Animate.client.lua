@@ -10,6 +10,11 @@ local Animator = Humanoid:FindFirstChildOfClass("Animator")
 local leftFootstepSound = script.Parent:WaitForChild("Left Leg"):WaitForChild("Footstep") :: Sound
 local rightFootstepSound = script.Parent:WaitForChild("Right Leg"):WaitForChild("Footstep") :: Sound
 
+local footstepIDs = {
+    [Enum.Material.Grass] = {"rbxassetid://180436334","rbxassetid://180436148"},
+    [Enum.Material.Concrete] = {"rbxassetid://7534137531","rbxassetid://7534137531"},
+}
+
 local animNames = {
     Idle = "Idle",
     Walk = "Walk",
@@ -60,10 +65,18 @@ function keyframeCallback(keyframeName)
     if (keyframeName == "End") then
         playAnimation(animInstances.Idle, 0.1)
     elseif (keyframeName == "FootstepL") then
+        local soundID = footstepIDs[Humanoid.FloorMaterial]
+        if not soundID then soundID = footstepIDs[Enum.Material.Concrete] end
+        leftFootstepSound.SoundId = soundID[1]
+
         leftFootstepSound.PlaybackSpeed = currentAnimSpeed
         leftFootstepSound.Volume = currentAnimSpeed/2
 		leftFootstepSound:Play()
     elseif (keyframeName == "FootstepR") then
+        local soundID = footstepIDs[Humanoid.FloorMaterial]
+        if not soundID then soundID = footstepIDs[Enum.Material.Concrete] end
+        leftFootstepSound.SoundId = soundID[2]
+
         rightFootstepSound.PlaybackSpeed = currentAnimSpeed
         rightFootstepSound.Volume = currentAnimSpeed/2
         rightFootstepSound:Play()
@@ -114,20 +127,20 @@ createAnimations()
 playAnimation(animNames.Idle, 0.1)
 
 local function updateAnimations()
-    if (Humanoid.MoveDirection.Magnitude == 0) then
-        humanoidState = animNames.Idle
-        playAnimation(animNames.Idle, 0.1)
-    elseif (Humanoid.MoveDirection.Magnitude > 0) then
+
+    if (Humanoid.FloorMaterial == Enum.Material.Air) then -- Jumping
+        playAnimation(animNames.Fall, 0.1)
+    elseif (Humanoid.MoveDirection.Magnitude > 0) then -- Walking/Running
         local animSpeed = Humanoid.WalkSpeed/StarterPlayer.CharacterWalkSpeed
         if animSpeed > 1 then
-            playAnimation(animNames.Run, 0.1)
+            playAnimation(animNames.Run, 0.3)
             animSpeed -= (StarterPlayer.CharacterWalkSpeed/2)
         else
-            playAnimation(animNames.Walk, 0.1)
+            playAnimation(animNames.Walk, 0.2)
         end
         setAnimSpeed(animSpeed)
-    elseif (Humanoid.FloorMaterial == Enum.Material.Air) then
-        playAnimation(animNames.Fall, 0.1)
+    elseif (Humanoid.MoveDirection.Magnitude == 0) then -- Idle
+        playAnimation(animNames.Idle, 0.3)
     end
 end
 
