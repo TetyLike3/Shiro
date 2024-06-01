@@ -1,6 +1,7 @@
 local RunService = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
 local Players = game:GetService("Players")
+local StarterPlayer = game:GetService("StarterPlayer")
 
 
 local _PlayerGui : PlayerGui
@@ -34,7 +35,14 @@ local CombatService
 local lightAttackCooldownEndTimestamp = 0
 local heavyAttackCooldownEndTimestamp = 0
 
+local isSprinting = false
 
+local characterStatsPollRate = 60 -- in Heartbeat frames
+local characterStatsCache : {
+    walkSpeed : number
+} = {
+    walkSpeed = StarterPlayer.CharacterWalkSpeed
+}
 
 
 --[---------------------------]--
@@ -74,6 +82,16 @@ local function UISInputBeganCallback(inputObject : InputObject, gameProcessedEve
         local success, cooldownEndTimestamp = CombatService:HeavyAttack():await()
         if not success then warn("Failed to perform heavy attack") end
         heavyAttackCooldownEndTimestamp = cooldownEndTimestamp
+    elseif inputObject.KeyCode == Enum.KeyCode.LeftShift then
+        isSprinting = true
+    end
+end
+
+-- Callback for when a user input is released
+local function UISInputEndedCallback(inputObject : InputObject, gameProcessedEvent)
+    if gameProcessedEvent then return end
+    if inputObject.KeyCode == Enum.KeyCode.LeftShift then
+        isSprinting = false
     end
 end
 
@@ -86,12 +104,41 @@ end
 
 
 --[---------------------------]--
---[        KNIT METHODS       ]--
+--[     FRAMEWORK METHODS     ]--
 --[---------------------------]--
 
 
+local debugPart = Instance.new("Part")
+debugPart.Size = Vector3.new(1,1,1)
+debugPart.Position = Vector3.zero
+debugPart.Anchored = true
+debugPart.Material = Enum.Material.Neon
+debugPart.CanCollide = false
+debugPart.Parent = workspace
+
 -- Updates WeaponStatus UI
-local function WeaponStatusUIUpdate(deltaTime)
+local function RenderSteppedCallback(deltaTime)
+    local char = Players.LocalPlayer.Character
+    if char then
+        if isSprinting then
+            char.Humanoid.WalkSpeed = StarterPlayer.CharacterWalkSpeed*4
+        else
+            char.Humanoid.WalkSpeed = StarterPlayer.CharacterWalkSpeed
+        end
+
+        -- Turn camera towards moving direction
+        local camera = workspace.CurrentCamera
+        local characterRotation = char.HumanoidRootPart.CFrame - char.HumanoidRootPart.Position
+        local cameraRotX, cameraRotY, cameraRotZ = camera.CFrame:ToEulerAnglesXYZ()
+
+        -- Tilt camera left/right based on if player is moving left/right
+        --if char.Humanoid.MoveDirection
+
+        -- Update camera rotation
+        camera.CFrame = CFrame.new(camera.CFrame.Position) * CFrame.fromEulerAnglesXYZ(cameraRotX, cameraRotY, cameraRotZ)
+    end
+
+    -- Weapon status UI
     local statusUI : Frame = getStatusUI().WeaponStatus
     local weapon = getWeaponOnPlayer()
 
@@ -119,6 +166,21 @@ local function WeaponStatusUIUpdate(deltaTime)
     end
 end
 
+local function HeartbeatCallback(deltaTime)
+    local char = Players.LocalPlayer.Character
+    if char then
+        if characterStatsCache.walkSpeed == StarterPlayer.CharacterWalkSpeed then
+            if isSprinting then
+                char.Humanoid.WalkSpeed = StarterPlayer.CharacterWalkSpeed*4
+            else
+                char.Humanoid.WalkSpeed = StarterPlayer.CharacterWalkSpeed
+            end
+        else
+            char.Humanoid.WalkSpeed = characterStatsCache.walkSpeed
+        end
+    end
+end
+
 
 local function characterAddedCallback(character)
     lightAttackCooldownEndTimestamp = 0
@@ -134,9 +196,12 @@ end
 function InputController:FrameworkStart()
     game:GetService("StarterGui"):SetCoreGuiEnabled(Enum.CoreGuiType.Backpack,false)
     UIS.InputBegan:Connect(UISInputBeganCallback)
+    UIS.InputEnded:Connect(UISInputEndedCallback)
 
     getStatusUI().Enabled = true
-    local weaponStatusUIUpdateHandle = RunService.RenderStepped:Connect(WeaponStatusUIUpdate)
+    local RenderSteppedHandle = RunService.RenderStepped:Connect(RenderSteppedCallback)
+    local HeartbeatHandle = RunService.Heartbeat:Connect(HeartbeatCallback)
+    CombatService.CharacterStatsChanged:Connect(function(newStats) characterStatsCache = newStats end)
 
     Players.LocalPlayer.CharacterAdded:Connect(characterAddedCallback)
     local char = Players.LocalPlayer.Character

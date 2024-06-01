@@ -8,7 +8,9 @@ local Framework = require(RS.Framework.Internal.Kuro)
 
 local CombatService = Framework.CreateService {
     Name = "CombatService",
-    Client = {},
+    Client = {
+        CharacterStatsChanged = Framework.CreateSignal(),
+    },
 }
 
 local RagdollService
@@ -30,6 +32,9 @@ local PlayerRegistry : {
             lightAttackHitboxes : {Model},
             heavyAttackAnimation: ({track: AnimationTrack} & weaponAnimationSounds),
             heavyAttackHitbox : Model,
+        },
+        characterStats: {
+            walkSpeed: number,
         }
     }
 } = {}
@@ -178,7 +183,8 @@ end
 -- Uses a skill from the player's toolbar.
 -- Returns the updated toolbar data.
 function CombatService.Client:UseSkillSlot(player : Player, skillIndex: number, skillInputData: skillModule.skillInputData) : {skillModule.SkillType}
-    local registeredSkills = PlayerRegistry[player.UserId].registeredSkills
+    local playerData = PlayerRegistry[player.UserId]
+    local registeredSkills = playerData.registeredSkills
     -- Sanity checks
     if (skillIndex < 0) or (skillIndex > #registeredSkills) then return end
     if player.Character.Humanoid.Health <= 0 then return registeredSkills end
@@ -194,12 +200,25 @@ function CombatService.Client:UseSkillSlot(player : Player, skillIndex: number, 
         return registeredSkills
     end
 
-    skill:Use(skillInputData)
+    skillInputData.playerOverrides = playerData.skillOverrides
+    print(skillInputData)
+    local result = skill:Use(skillInputData)
+    
+    -- Set new overrides if there are any
+    if result and result.newCharacterStats then
+        for stat, value in result.newCharacterStats do
+            if not playerData.characterStats[stat] then continue end
+            playerData.characterStats[stat] = value
+        end
+        CombatService.Client.CharacterStatsChanged:Fire(player, playerData.characterStats)
+        print(playerData.characterStats)
+    end
+
     return registeredSkills
 end
 
 
-
+--#region WEAPONS
 local animWeight = 1
 -- Toggles the weapon's presence on the player, and loads/unloads animations for the weapon
 function CombatService.Client:ToggleWeapon(player : Player)
@@ -383,11 +402,17 @@ function CombatService.Client:HeavyAttack(player : Player) : (number, RemoteEven
     -- Return early to pass cooldown timestamp to client
     return playerEntry.heavyAttackCooldownEndTimestamp
 end
+--#endregion
+
+function CombatService.Client:GetCharacterStats(player : Player)
+    return PlayerRegistry[player.UserId].characterStats
+end
+
+
 
 --[---------------------------]--
 --[     FRAMEWORK METHODS     ]--
 --[---------------------------]--
-
 
 local footstepSound = Instance.new("Sound")
 footstepSound.Name = "Footstep"
@@ -415,6 +440,8 @@ local function playerAddedCallback(player : Player)
         end)
     end)
 
+    PlayerRegistry[player.UserId].skillOverrides = {}
+
     PlayerRegistry[player.UserId].weaponData = {
         weaponName = "Messer",
         state = PlayerWeaponStates.Idle,
@@ -424,6 +451,10 @@ local function playerAddedCallback(player : Player)
         heavyAttackAnimationTrack = nil,
         heavyAttackCooldownEndTimestamp = 0,
         parryCooldownEndTimestamp = 0,
+    }
+
+    PlayerRegistry[player.UserId].characterStats = {
+        walkSpeed = game:GetService("StarterPlayer").CharacterWalkSpeed
     }
 end
 

@@ -134,6 +134,9 @@ SkillsModule.SkillTypes = {
     Utility = "Utility"
 }
 
+export type characterStats = {
+    walkSpeed: number
+}
 
 -- Data that is passed to a skill when it is used
 export type skillInputData = {
@@ -141,7 +144,8 @@ export type skillInputData = {
     playerOverrides: {[string]: any},
 }
 export type skillOutputData = {
-    startCooldown: boolean
+    startCooldown: boolean,
+    newCharacterStats: characterStats?
 }
 
 type SkillUseFunction = (skill: SkillType, inputData: skillInputData) -> skillOutputData
@@ -166,7 +170,7 @@ local function WrapUseFunction(skill: SkillType, skillUseFunction: SkillUseFunct
             local returnData = skillUseFunction(skill, inputData)
             skill.Active = false
             if returnData.startCooldown then skill.CooldownEndTimestamp = (DateTime.now().UnixTimestampMillis/1000) + skill.Cooldown end
-            if returnData.fxEvent then skill.FXEvent = returnData.fxEvent end
+            return returnData
         else
             print("Skill on cooldown")
         end
@@ -217,40 +221,43 @@ Skills.FlashStepSkill = SkillsModule.CreateSkill("Sonido", SkillsModule.SkillTyp
     local skillSpeed = applyOverride(inputData.playerOverrides, "FlashStepSpeed", FlashStepSpeed)
     local skillShadowFrequency = applyOverride(inputData.playerOverrides, "FlashStepShadowFrequency", FlashStepShadowFrequency)
     local skillStandingMultiplier = applyOverride(inputData.playerOverrides, "FlashStepStandingMultiplier", FlashStepStandingMultiplier)
-
-    local hum = skill.Caster.Character.Humanoid
-    hum.WalkSpeed = skillSpeed
-    HideCharacter(skill.Caster.Character, true)
-
-    skill.Caster.Character:FindFirstChild("Left Leg"):FindFirstChild("Footstep").Volume = 0
-    skill.Caster.Character:FindFirstChild("Right Leg"):FindFirstChild("Footstep").Volume = 0
+    
     task.spawn(function()
+        local char = skill.Caster.Character
+        local hum = char.Humanoid
+        hum.WalkSpeed = skillSpeed
+        HideCharacter(char, true)
+    
+        char:FindFirstChild("Left Leg"):FindFirstChild("Footstep").Volume = 0
+        char:FindFirstChild("Right Leg"):FindFirstChild("Footstep").Volume = 0
+        task.spawn(function()
+            repeat
+                if not isCharacterMoving(char) then
+                    task.wait(.1)
+                else
+                    CreateCharacterShadow(char)
+                    task.wait(skillShadowFrequency)
+                end
+            until skill.Active == false
+            char:FindFirstChild("Left Leg"):FindFirstChild("Footstep").Volume = .5
+            char:FindFirstChild("Right Leg"):FindFirstChild("Footstep").Volume = .5
+        end)
+    
+        local timeInFlashStep = 0
         repeat
-            if not isCharacterMoving(skill.Caster.Character) then
-                task.wait(.1)
+            task.wait(0.1)
+            if not isCharacterMoving(char) then
+                timeInFlashStep += 0.1*skillStandingMultiplier
             else
-                CreateCharacterShadow(skill.Caster.Character)
-                task.wait(skillShadowFrequency)
+                timeInFlashStep += 0.1
             end
-        until skill.Active == false
-        skill.Caster.Character:FindFirstChild("Left Leg"):FindFirstChild("Footstep").Volume = .5
-        skill.Caster.Character:FindFirstChild("Right Leg"):FindFirstChild("Footstep").Volume = .5
+        until timeInFlashStep >= skillDuration
+        hum.WalkSpeed = StarterPlayer.CharacterWalkSpeed
+        task.wait(.2)
+        HideCharacter(char, false)
     end)
 
-    local timeInFlashStep = 0
-    repeat
-        task.wait(0.1)
-        if not isCharacterMoving(skill.Caster.Character) then
-            timeInFlashStep += 0.1*skillStandingMultiplier
-        else
-            timeInFlashStep += 0.1
-        end
-    until timeInFlashStep >= skillDuration
-    hum.WalkSpeed = StarterPlayer.CharacterWalkSpeed
-    task.wait(.2)
-    HideCharacter(skill.Caster.Character, false)
-
-    return {startCooldown = true}
+    return {startCooldown = true, newCharacterStats = {walkSpeed = skillSpeed}}
 end)
 
 
