@@ -198,6 +198,8 @@ function InputController:FrameworkStart()
     UIS.InputBegan:Connect(UISInputBeganCallback)
     UIS.InputEnded:Connect(UISInputEndedCallback)
 
+    local debugLabelWalkSpeed = Framework.Debug.CreateLabel("WalkSpeed")
+
     getStatusUI().Enabled = true
     local RenderSteppedHandle = RunService.RenderStepped:Connect(RenderSteppedCallback)
     local HeartbeatHandle = RunService.Heartbeat:Connect(HeartbeatCallback)

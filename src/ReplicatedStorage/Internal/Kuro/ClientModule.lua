@@ -29,8 +29,10 @@ local function getObject(fullName : string) : Instance
 	return current
 end
 
+local Players = game:GetService("Players")
+
 local ClientModule = {}
-ClientModule.Player = game:GetService("Players").LocalPlayer
+ClientModule.Player = Players.LocalPlayer
 ClientModule.Util = script.Parent.Parent.Util
 ClientModule.Common = require(ClientModule.Util.Common)
 ClientModule.SharedStorage = game:GetService("ReplicatedStorage").Framework.Storage :: Folder
@@ -77,6 +79,29 @@ FXEvent.OnClientEvent:Connect(function(fxData : Types.FXDefaultData)
 		end
 	end
 end)
+
+-- Debug system
+ClientModule.Debug = {}
+
+local debugScreenGUI = script:WaitForChild("KuroDebug", 10) :: ScreenGui
+debugScreenGUI.Parent = Players.LocalPlayer.PlayerGui
+
+local debugInstances : {Labels : {[string]: Frame}} = {
+	Labels = {}
+}
+
+function ClientModule.Debug.CreateLabel(labelName: string) : TextLabel
+	local label = debugScreenGUI.TextLabels:FindFirstChild("TemplateLabel"):Clone() :: Frame
+	label.Name = labelName
+	label.LabelName.Text = labelName..": "
+	label.LabelValue.Text = ""
+	label.Visible = true
+	label.LayoutOrder = #debugInstances.Labels
+
+	label.Parent = debugScreenGUI.TextLabels
+	debugInstances.Labels[labelName] = label
+	return label.LabelValue
+end
 
 type ControllerDefinition = {
 	Name: string,
