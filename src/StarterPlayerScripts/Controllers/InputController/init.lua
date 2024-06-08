@@ -120,12 +120,6 @@ debugPart.Parent = workspace
 local function RenderSteppedCallback(deltaTime)
     local char = Players.LocalPlayer.Character
     if char then
-        if isSprinting then
-            char.Humanoid.WalkSpeed = StarterPlayer.CharacterWalkSpeed*4
-        else
-            char.Humanoid.WalkSpeed = StarterPlayer.CharacterWalkSpeed
-        end
-
         -- Turn camera towards moving direction
         local camera = workspace.CurrentCamera
         local characterRotation = char.HumanoidRootPart.CFrame - char.HumanoidRootPart.Position
@@ -176,6 +170,7 @@ local function HeartbeatCallback(deltaTime)
                 char.Humanoid.WalkSpeed = StarterPlayer.CharacterWalkSpeed
             end
         else
+            print("Character walking speed not default")
             char.Humanoid.WalkSpeed = characterStatsCache.walkSpeed
         end
     end

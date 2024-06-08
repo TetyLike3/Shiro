@@ -4,7 +4,7 @@ local RS = game:GetService("ReplicatedStorage")
 local Framework = require(RS.Framework.Internal.Kuro)
 
 local frameworkOptions = {
-    DebugMode = false
+    DebugMode = true
 }
 
 warn("--- SERVER FRAMEWORK INITIALIZING ---")
