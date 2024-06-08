@@ -34,21 +34,6 @@ if not ServerModule.TempStorage:FindFirstChild("AttachmentParent") then
     attachmentParent.Parent = ServerModule.TempStorage
 end
 
-local SIGNAL_MARKER = newproxy(true)
-getmetatable(SIGNAL_MARKER).__tostring = function()
-	return "SIGNAL_MARKER"
-end
-
-local UNRELIABLE_SIGNAL_MARKER = newproxy(true)
-getmetatable(UNRELIABLE_SIGNAL_MARKER).__tostring = function()
-	return "UNRELIABLE_SIGNAL_MARKER"
-end
-
-local PROPERTY_MARKER = newproxy(true)
-getmetatable(PROPERTY_MARKER).__tostring = function()
-	return "PROPERTY_MARKER"
-end
-
 local serviceStorage = Instance.new("Folder")
 serviceStorage.Name = "Services"
 
@@ -56,6 +41,24 @@ local Promise = require(ServerModule.Util.Promise)
 local Comm = require(ServerModule.Util.Comm)
 local ServerComm = Comm.ServerComm
 local Types = require(ServerModule.Util.Types)
+
+
+
+local SIGNAL_MARKER : Types.RemoteSignal = newproxy(true)
+getmetatable(SIGNAL_MARKER).__tostring = function()
+	return "SIGNAL_MARKER"
+end
+
+local UNRELIABLE_SIGNAL_MARKER : Types.RemoteSignal = newproxy(true)
+getmetatable(UNRELIABLE_SIGNAL_MARKER).__tostring = function()
+	return "UNRELIABLE_SIGNAL_MARKER"
+end
+
+local PROPERTY_MARKER : Types.RemoteProperty<any> = newproxy(true)
+getmetatable(PROPERTY_MARKER).__tostring = function()
+	return "PROPERTY_MARKER"
+end
+
 
 function ServerModule:FireSoundFXEvent(fx : Instance, parent : Instance)
     fx.Parent = ServerModule.TempStorage
@@ -92,7 +95,10 @@ ServerModule.FXEvent = FXEvent
 
 type ServiceDefinition = {
     Name: string,
-	Client: { [any]: any }?,
+	Client: {
+        Signals: {[string]: Types.RemoteSignal},
+        Properties: {[string]: Types.RemoteProperty<any>}
+    }?,
 }
 
 type LoadedService = {
@@ -106,7 +112,8 @@ type LoadedService = {
 
 type ServiceClient = {
 	Server: LoadedService,
-	[any]: any,
+    Signals: {[string]: Types.RemoteSignal},
+    Properties: {[string]: Types.RemoteProperty<any>}
 }
 
 
@@ -130,9 +137,16 @@ function ServerModule.CreateService(definition : ServiceDefinition) : LoadedServ
     service.Comm = ServerComm.new(serviceStorage, definition.Name)
 
     if type(service.Client) ~= "table" then
-        service.Client = { Server = service }
+        service.Client = { Server = service, Signals = {}, Properties = {} }
     else
         service.Client.Server = service
+
+        if type(service.Client.Signals) ~= "table" then
+            service.Client.Signals = {}
+        end
+        if type(service.Client.Properties) ~= "table" then
+            service.Client.Properties = {}
+        end
     end
 
     debugPrint(`Created service {service.Name}`)
@@ -188,19 +202,28 @@ function ServerModule.Start(options: FrameworkOptions?)
     return Promise.new(function(resolve)
         for _,service in loadedServices do
             for k,v in service.Client do
+                if k == "Signals" or k == "Properties" then continue end
+
                 if (type(v) == "function") then
                     service.Comm:WrapMethod(service.Client, k)
                     debugPrint(`Wrapped method {k} in {service.Name}`)
-                elseif (v == SIGNAL_MARKER) then
-                    service.Client[k] = service.Comm:CreateSignal(k,false)
+                end
+            end
+
+            for k,v in service.Client.Signals do
+                if (v == SIGNAL_MARKER) then
+                    service.Client.Signals[k] = service.Comm:CreateSignal(k,false)
                     debugPrint(`Created signal {k} in {service.Name}`)
                 elseif (v == UNRELIABLE_SIGNAL_MARKER) then
-                    service.Client[k] = service.Comm:CreateSignal(k,true)
+                    service.Client.Signals[k] = service.Comm:CreateSignal(k,true)
                     debugPrint(`Created unreliable signal {k} in {service.Name}`)
-                elseif (type(v) == "table") and (v[1] == PROPERTY_MARKER) then
-                    service.Client[k] = service.Comm:CreateProperty(k, v[2])
-                    debugPrint(`Created property {k} with value {v[2]} in {service.Name}`)
                 end
+            end
+
+            for k,v in service.Client.Properties do
+                if not (v == PROPERTY_MARKER) then continue end
+                service.Client.Properties[k] = service.Comm:CreateProperty(k, v)
+                debugPrint(`Created property {k} with value {service.Client.Properties[k]} in {service.Name}`)
             end
         end
 

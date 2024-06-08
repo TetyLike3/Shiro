@@ -117,7 +117,8 @@ type LoadedController = {
 }
 
 type ServiceReference = {
-	[any]: any,
+	Signals: {[string]: Types.ClientRemoteSignal},
+	Properties: {[string]: Types.ClientRemoteProperty},
 }
 
 

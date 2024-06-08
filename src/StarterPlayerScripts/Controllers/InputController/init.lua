@@ -203,7 +203,14 @@ function InputController:FrameworkStart()
     getStatusUI().Enabled = true
     local RenderSteppedHandle = RunService.RenderStepped:Connect(RenderSteppedCallback)
     local HeartbeatHandle = RunService.Heartbeat:Connect(HeartbeatCallback)
-    CombatService.CharacterStatsChanged:Connect(function(newStats) characterStatsCache = newStats end)
+
+    -- Character stats
+    CombatService.Properties.CharacterStats:Observe(function(newStats)
+        characterStatsCache = newStats
+        debugLabelWalkSpeed.Text = characterStatsCache.walkSpeed
+        print("Character stats changed")
+    end)
+    debugLabelWalkSpeed.Text = characterStatsCache.walkSpeed
 
     Players.LocalPlayer.CharacterAdded:Connect(characterAddedCallback)
     local char = Players.LocalPlayer.Character

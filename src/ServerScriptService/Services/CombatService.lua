@@ -6,40 +6,50 @@ local skillModule = require(RS.Framework.Modules.SkillsModule)
 local skillModuleTypes = require(RS.Framework.Modules.SkillsModule.Types)
 
 
+type CharacterStats = {
+    
+}
+type PlayerData = {
+    registeredSkills: {skillModuleTypes.SkillType},
+    skillOverrides: {[string]: any},
+    weaponData: {
+        weaponName: string,
+        state: string,
+        lightAttackCooldownEndTimestamp: number,
+        heavyAttackCooldownEndTimestamp: number,
+        parryCooldownEndTimestamp: number,
+        lightAttackAnimations: {{track: AnimationTrack} & weaponAnimationSounds},
+        lightAttackAnimationIndex : number,
+        lightAttackHitboxes : {Model},
+        heavyAttackAnimation: ({track: AnimationTrack} & weaponAnimationSounds),
+        heavyAttackHitbox : Model,
+    },
+    characterStats: {
+        walkSpeed: number,
+    }
+}
+
+-- Assigns a table of equipped skills to each player's userId
+-- Also assigns a weapon name and state to each player's userId
+local PlayerRegistry : {[number]: PlayerData} = {}
+
+
 local Framework = require(RS.Framework.Internal.Kuro)
 
 local CombatService = Framework.CreateService {
     Name = "CombatService",
     Client = {
-        CharacterStatsChanged = Framework.CreateSignal(),
+        Signals = {},
+        Properties = {
+            CharacterStats = Framework.CreateProperty({
+                walkSpeed = 16,
+            } :: skillModuleTypes.CharacterStats),
+        },
     },
 }
 
 local RagdollService
 
--- Assigns a table of equipped skills to each player's userId
--- Also assigns a weapon name and state to each player's userId
-local PlayerRegistry : {
-    [number]: {
-        registeredSkills: {skillModule.SkillType},
-        skillOverrides: {[string]: any},
-        weaponData: {
-            weaponName: string,
-            state: string,
-            lightAttackCooldownEndTimestamp: number,
-            heavyAttackCooldownEndTimestamp: number,
-            parryCooldownEndTimestamp: number,
-            lightAttackAnimations: {{track: AnimationTrack} & weaponAnimationSounds},
-            lightAttackAnimationIndex : number,
-            lightAttackHitboxes : {Model},
-            heavyAttackAnimation: ({track: AnimationTrack} & weaponAnimationSounds),
-            heavyAttackHitbox : Model,
-        },
-        characterStats: {
-            walkSpeed: number,
-        }
-    }
-} = {}
 
 local PVPZones = workspace:WaitForChild("PVPZones"):GetChildren()
 
@@ -212,7 +222,7 @@ function CombatService.Client:UseSkillSlot(player : Player, skillIndex: number, 
             if not playerData.characterStats[stat] then continue end
             playerData.characterStats[stat] = value
         end
-        CombatService.Client.CharacterStatsChanged:Fire(player, playerData.characterStats)
+        CombatService.Client.Properties.CharacterStats:SetFor(player, playerData.characterStats)
         print(playerData.characterStats)
     end
 
@@ -406,10 +416,6 @@ function CombatService.Client:HeavyAttack(player : Player) : (number, RemoteEven
 end
 --#endregion
 
-function CombatService.Client:GetCharacterStats(player : Player)
-    return PlayerRegistry[player.UserId].characterStats
-end
-
 
 
 --[---------------------------]--
@@ -458,6 +464,7 @@ local function playerAddedCallback(player : Player)
     PlayerRegistry[player.UserId].characterStats = {
         walkSpeed = game:GetService("StarterPlayer").CharacterWalkSpeed
     }
+    CombatService.Client.Properties.CharacterStats:SetFor(player, PlayerRegistry[player.UserId].characterStats)
 end
 
 function CombatService:FrameworkStart()

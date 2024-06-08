@@ -49,6 +49,7 @@ function ClientComm.new(parent: Instance, usePromise: boolean, namespace: string
 	local self = setmetatable({}, ClientComm)
 	self._instancesFolder = folder
 	self._usePromise = usePromise
+
 	return self
 end
 
@@ -166,7 +167,7 @@ end
 	```
 ]=]
 function ClientComm:BuildObject()
-	local obj = {}
+	local obj = {Signals = {}, Properties = {}}
 	local rfFolder = self._instancesFolder:FindFirstChild("RF")
 	local reFolder = self._instancesFolder:FindFirstChild("RE")
 	local rpFolder = self._instancesFolder:FindFirstChild("RP")
@@ -186,7 +187,7 @@ function ClientComm:BuildObject()
 			if (not remoteEvent:IsA("RemoteEvent")) and (not remoteEvent:IsA("UnreliableRemoteEvent")) then
 				continue
 			end
-			obj[remoteEvent.Name] = self:GetSignal(remoteEvent.Name)
+			obj.Signals[remoteEvent.Name] = self:GetSignal(remoteEvent.Name)
 		end
 	end
 	if rpFolder then
@@ -194,7 +195,7 @@ function ClientComm:BuildObject()
 			if not remoteEvent:IsA("RemoteEvent") then
 				continue
 			end
-			obj[remoteEvent.Name] = self:GetProperty(remoteEvent.Name)
+			obj.Properties[remoteEvent.Name] = self:GetProperty(remoteEvent.Name)
 		end
 	end
 	return obj
