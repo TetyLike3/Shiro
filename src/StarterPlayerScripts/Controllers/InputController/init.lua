@@ -31,6 +31,8 @@ local InputController = Framework.CreateController { Name = "InputController" }
 local SkillController
 local CombatService
 
+local skillModuleT = require(RS.Framework.Modules.SkillsModule.Types)
+
 -- Controller Variables
 local lightAttackCooldownEndTimestamp = 0
 local heavyAttackCooldownEndTimestamp = 0
@@ -38,9 +40,7 @@ local heavyAttackCooldownEndTimestamp = 0
 local isSprinting = false
 
 local characterStatsPollRate = 60 -- in Heartbeat frames
-local characterStatsCache : {
-    walkSpeed : number
-} = {
+local characterStatsCache : skillModuleT.CharacterStats = {
     walkSpeed = StarterPlayer.CharacterWalkSpeed
 }
 

@@ -28,9 +28,7 @@ local ClientRemoteSignal = require(script.Parent.ClientRemoteSignal)
 local ClientRemoteProperty = {}
 ClientRemoteProperty.__index = ClientRemoteProperty
 
-function ClientRemoteProperty.new(
-	remoteEvent: RemoteEvent
-)
+function ClientRemoteProperty.new(remoteEvent: RemoteEvent)
 	local self = setmetatable({}, ClientRemoteProperty)
 	self._remoteSignal = ClientRemoteSignal.new(remoteEvent)
 	self._ready = false

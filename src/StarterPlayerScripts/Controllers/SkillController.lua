@@ -26,11 +26,11 @@ local Framework = require(RS.Framework.Internal.Kuro)
 local SkillController = Framework.CreateController { Name = "SkillController" }
 
 -- Module References
-local skillModule = require(RS.Framework.Modules.SkillsModule)
+local skillModuleTypes = require(RS.Framework.Modules.SkillsModule.Types)
 local CombatService
 
 -- Controller Variables
-local RegisteredSkills : {skillModule.SkillType} = table.create(10,-1)
+local RegisteredSkills : {skillModuleTypes.SkillType} = table.create(10,-1)
 
 
 
@@ -68,7 +68,7 @@ function SkillController:UseSkill(skillIndex)
     skill.Active = true
 
     -- Create skill input data
-    local skillInputData : skillModule.skillInputData = {
+    local skillInputData : skillModuleTypes.SkillInputData = {
         mouseHitPosition = Players.LocalPlayer:GetMouse().Hit.Position
     }
 

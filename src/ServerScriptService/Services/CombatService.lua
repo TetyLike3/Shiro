@@ -3,6 +3,8 @@ local Players = game:GetService("Players")
 local RS = game:GetService("ReplicatedStorage")
 
 local skillModule = require(RS.Framework.Modules.SkillsModule)
+local skillModuleTypes = require(RS.Framework.Modules.SkillsModule.Types)
+
 
 local Framework = require(RS.Framework.Internal.Kuro)
 
@@ -163,7 +165,7 @@ end
 
 -- Registers a skill to the player's toolbar.
 -- Returns the updated toolbar data.
-function CombatService.Client:RegisterSkill(player : Player, skillName: string) : {skillModule.SkillType}
+function CombatService.Client:RegisterSkill(player : Player, skillName: string) : {skillModuleTypes.SkillType}
     -- Get the skill object from the module
     local skill = skillModule.GetSkill(skillName)
     if not skill then return end
@@ -182,7 +184,7 @@ end
 
 -- Uses a skill from the player's toolbar.
 -- Returns the updated toolbar data.
-function CombatService.Client:UseSkillSlot(player : Player, skillIndex: number, skillInputData: skillModule.skillInputData) : {skillModule.SkillType}
+function CombatService.Client:UseSkillSlot(player : Player, skillIndex: number, skillInputData: skillModuleTypes.SkillInputData) : {skillModuleTypes.SkillType}
     local playerData = PlayerRegistry[player.UserId]
     local registeredSkills = playerData.registeredSkills
     -- Sanity checks

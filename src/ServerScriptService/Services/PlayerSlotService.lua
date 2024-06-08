@@ -6,7 +6,6 @@ local Framework = require(RS.Framework.Internal.Kuro)
 
 local PlayerSlotService = Framework.CreateService {
     Name = "PlayerSlotService",
-    Client = {},
 }
 
 

@@ -124,6 +124,7 @@ end
 --[           MODULE          ]--
 --[---------------------------]--
 
+local Types = require(script.Types)
 
 local SkillsModule = {}
 
@@ -134,36 +135,10 @@ SkillsModule.SkillTypes = {
     Utility = "Utility"
 }
 
-export type characterStats = {
-    walkSpeed: number
-}
-
--- Data that is passed to a skill when it is used
-export type skillInputData = {
-    mouseHitPosition: Vector3,
-    playerOverrides: {[string]: any},
-}
-export type skillOutputData = {
-    startCooldown: boolean,
-    newCharacterStats: characterStats?
-}
-
-type SkillUseFunction = (skill: SkillType, inputData: skillInputData) -> skillOutputData
--- Skill object type
-export type SkillType = {
-    Name: string,
-    Type: string,
-    Cooldown: number,
-    CooldownEndTimestamp: number,
-    Active: boolean,
-    Caster: Player,
-    Use: SkillUseFunction
-}
-
 
 -- A wrapper function that handles cooldowns
-local function WrapUseFunction(skill: SkillType, skillUseFunction: SkillUseFunction) : SkillUseFunction
-    local wrapped: SkillUseFunction = function(skill: SkillType, inputData: skillInputData)
+local function WrapUseFunction(skill: Types.SkillType, skillUseFunction: Types.SkillUseFunction) : Types.SkillUseFunction
+    local wrapped: Types.SkillUseFunction = function(skill: Types.SkillType, inputData: Types.SkillInputData)
         -- Check if the skill is on cooldown
         if skill.CooldownEndTimestamp <= DateTime.now().UnixTimestampMillis/1000 then
             skill.Active = true
@@ -179,8 +154,8 @@ local function WrapUseFunction(skill: SkillType, skillUseFunction: SkillUseFunct
 end
 
 -- Create a skill object, given the name, category, cooldown time (seconds), and code when used.
-function SkillsModule.CreateSkill(name: string, skillType: string, cooldown: number, useFunction: SkillUseFunction)
-    local skill: SkillType = {
+function SkillsModule.CreateSkill(name: string, skillType: string, cooldown: number, useFunction: Types.SkillUseFunction)
+    local skill: Types.SkillType = {
         Name = name,
         Type = skillType,
         Cooldown = cooldown,
@@ -203,11 +178,13 @@ end
 --[---------------------------]--
 
 --! Skill Use functions are always run server-side
-local Skills : {[string]: SkillType} = {}
+local Skills : {[string]: Types.SkillType} = {}
 
 
 
 --[         FLASH STEP        ]--
+
+--#region
 
 -- Variables
 local FlashStepDuration = .8
@@ -216,7 +193,7 @@ local FlashStepShadowFrequency = .24
 local FlashStepStandingMultiplier = 0.2
 
 -- Skill code
-Skills.FlashStepSkill = SkillsModule.CreateSkill("Sonido", SkillsModule.SkillTypes.Utility, 3.2, function(skill: SkillType, inputData: skillInputData) : skillOutputData
+Skills.FlashStepSkill = SkillsModule.CreateSkill("Sonido", SkillsModule.SkillTypes.Utility, 3.2, function(skill: Types.SkillType, inputData: Types.SkillInputData) : Types.SkillOutputData
     local skillDuration = applyOverride(inputData.playerOverrides, "FlashStepDuration", FlashStepDuration)
     local skillSpeed = applyOverride(inputData.playerOverrides, "FlashStepSpeed", FlashStepSpeed)
     local skillShadowFrequency = applyOverride(inputData.playerOverrides, "FlashStepShadowFrequency", FlashStepShadowFrequency)
@@ -260,21 +237,25 @@ Skills.FlashStepSkill = SkillsModule.CreateSkill("Sonido", SkillsModule.SkillTyp
     return {startCooldown = true, newCharacterStats = {walkSpeed = skillSpeed}}
 end)
 
-
+--#endregion
 
 --[            HOP           ]--
 
+--#region
+
 -- Skill code
-Skills.HopSkill = SkillsModule.CreateSkill("Hop", SkillsModule.SkillTypes.Utility, 1, function(skill: SkillType, inputData: skillInputData) : skillOutputData
+Skills.HopSkill = SkillsModule.CreateSkill("Hop", SkillsModule.SkillTypes.Utility, 1, function(skill: Types.SkillType, inputData: Types.SkillInputData) : Types.SkillOutputData
     local humRootPart = skill.Caster.Character.HumanoidRootPart
     local newPos = humRootPart.Position + (Vector3.yAxis * 20)
     skill.Caster.Character:MoveTo(newPos)
     return {startCooldown = true}
 end)
 
-
+--#endregion
 
 --[         FIREBALL         ]--
+
+--#region
 
 -- Variables
 local FireballLifetime = 6
@@ -283,7 +264,7 @@ local FireballDamage = 40
 local FireballSize = 2.4
 
 -- Skill code
-Skills.FireballSkill = SkillsModule.CreateSkill("Fireball", SkillsModule.SkillTypes.Offensive, .02, function(skill: SkillType, inputData: skillInputData) : skillOutputData
+Skills.FireballSkill = SkillsModule.CreateSkill("Fireball", SkillsModule.SkillTypes.Offensive, .02, function(skill: Types.SkillType, inputData: Types.SkillInputData) : Types.SkillOutputData
     local humRootPart = skill.Caster.Character.HumanoidRootPart
     local humanoid = skill.Caster.Character.Humanoid
 
@@ -346,9 +327,11 @@ Skills.FireballSkill = SkillsModule.CreateSkill("Fireball", SkillsModule.SkillTy
     return {startCooldown = true}
 end)
 
-
+--#endregion
 
 --[          GODRAY          ]--
+
+--#region
 
 -- Variables
 local GodrayHitTime = 1.5
@@ -357,7 +340,7 @@ local GodrayRadius = 52
 local GodrayMaxDistance = 192
 
 -- Skill code
-Skills.GodraySkill = SkillsModule.CreateSkill("Godray", SkillsModule.SkillTypes.Offensive, 3, function(skill : SkillType, inputData: skillInputData) : skillOutputData
+Skills.GodraySkill = SkillsModule.CreateSkill("Godray", SkillsModule.SkillTypes.Offensive, 3, function(skill : Types.SkillType, inputData: Types.SkillInputData) : Types.SkillOutputData
     local godrayTargetPoint = inputData.mouseHitPosition
     if (godrayTargetPoint - skill.Caster.Character.HumanoidRootPart.Position).Magnitude > GodrayMaxDistance then return {startCooldown = false} end
 
@@ -413,9 +396,10 @@ Skills.GodraySkill = SkillsModule.CreateSkill("Godray", SkillsModule.SkillTypes.
     return {startCooldown = true}
 end)
 
+--#endregion
 
 -- Returns a skill given the name
-function SkillsModule.GetSkill(name: string) : SkillType
+function SkillsModule.GetSkill(name: string) : Types.SkillType
     local copy = nil
     for _,skill in pairs(Skills) do
         if skill.Name == name then
