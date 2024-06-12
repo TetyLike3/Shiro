@@ -187,7 +187,12 @@ local function HeartbeatCallback(deltaTime)
 end
 
 
+local debugLabelWalkSpeed : TextLabel
+local debugLabelRealWalkSpeed : TextLabel
+
 local function characterAddedCallback(character)
+    local humanoid : Humanoid = character:WaitForChild("Humanoid")
+
     lightAttackCooldownEndTimestamp = 0
     heavyAttackCooldownEndTimestamp = 0
 
@@ -196,6 +201,11 @@ local function characterAddedCallback(character)
     if oldAnimateScript then oldAnimateScript:Destroy() end
     animateScript.Parent = character
     animateScript.Enabled = true
+
+    humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
+        debugLabelRealWalkSpeed.Text = humanoid.WalkSpeed
+    end)
+    debugLabelRealWalkSpeed.Text = humanoid.WalkSpeed
 end
 
 function InputController:FrameworkStart()
@@ -203,7 +213,8 @@ function InputController:FrameworkStart()
     UIS.InputBegan:Connect(UISInputBeganCallback)
     UIS.InputEnded:Connect(UISInputEndedCallback)
 
-    local debugLabelWalkSpeed = Framework.Debug.CreateLabel("WalkSpeed")
+    debugLabelWalkSpeed = Framework.Debug.CreateLabel("WalkSpeed")
+    debugLabelRealWalkSpeed = Framework.Debug.CreateLabel("ActualWalkSpeed")
 
     getStatusUI().Enabled = true
     local RenderSteppedHandle = RunService.RenderStepped:Connect(RenderSteppedCallback)
