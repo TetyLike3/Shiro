@@ -32,9 +32,10 @@ end
 
 
 -- Create a part with the CollisionGroup set to "SkillGroup"
-local function createPart() : Part
+local function createPart(name : string, casterName : string) : Part
     local part = Instance.new("Part")
     part.CollisionGroup = "SkillGroup"
+    part.Name = string.format("%s_%s_%s", casterName, name, HttpService:GenerateGUID(false))
 
     return part
 end
@@ -66,7 +67,7 @@ end
 local function CreateCharacterShadow(character: Model)
     for _,part in pairs(character:GetChildren()) do
         if part:IsA("Part") and not (part.Name == "HumanoidRootPart") then
-            local shadow = createPart()
+            local shadow = createPart("SonidoShadow",character.Name)
             shadow.Size = part.Size
             shadow.Anchored = true
             shadow.CanCollide = false
@@ -269,7 +270,7 @@ Skills.FireballSkill = SkillsModule.CreateSkill("Fireball", SkillsModule.SkillTy
     local humanoid = skill.Caster.Character.Humanoid
 
     -- Fireball part
-    local fireball = createPart()
+    local fireball = createPart("Fireball", skill.Caster.Name)
     fireball.Shape = Enum.PartType.Ball
     fireball.Material = Enum.Material.Rock
     fireball.Color = Color3.fromRGB(58, 58, 58)
@@ -287,7 +288,6 @@ Skills.FireballSkill = SkillsModule.CreateSkill("Fireball", SkillsModule.SkillTy
 
     -- Position fireball
     fireball.CFrame = humRootPart.CFrame + (humRootPart.CFrame.LookVector * ((humanoid.WalkSpeed/30 * humanoid.MoveDirection.Magnitude) + 2))
-    fireball.Name = string.format("%s_Fireball_%s", skill.Caster.Name, HttpService:GenerateGUID(false))
     fireball.Parent = workspace
 
     -- Hitbox
@@ -344,8 +344,7 @@ Skills.GodraySkill = SkillsModule.CreateSkill("Godray", SkillsModule.SkillTypes.
     local godrayTargetPoint = inputData.mouseHitPosition
     if (godrayTargetPoint - skill.Caster.Character.HumanoidRootPart.Position).Magnitude > GodrayMaxDistance then return {startCooldown = false} end
 
-    local godrayPart = createPart()
-    godrayPart.Name = "Godray"
+    local godrayPart = createPart("Godray", skill.Caster.Name)
     godrayPart.Shape = Enum.PartType.Cylinder
     godrayPart.Size = Vector3.new(512,GodrayRadius*1.75,GodrayRadius*1.75)
     godrayPart.Anchored = true
