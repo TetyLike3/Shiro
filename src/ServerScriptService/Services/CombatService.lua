@@ -62,6 +62,7 @@ local PlayerWeaponStates = {
 }
 
 type weaponAnimationSounds = {swingSound: Sound, hitSound: Sound, missSound: Sound}
+type weaponAssetsTable = {Model: Model, Animations: Folder, Hitboxes: Folder}
 
 
 --[---------------------------]--
@@ -86,9 +87,30 @@ end
 local function isCooldownEnded(timestamp : number) : boolean
     return getTimestamp() >= timestamp
 end
+local function getWeaponAssets(weaponName : string) : weaponAssetsTable
+    local weaponFolder = Framework.ServerStorage.Weapons:FindFirstChild(weaponName) :: Folder
+    if not weaponFolder then return end
+
+    local model = nil
+    for _,child in weaponFolder:GetChildren() do
+        if CollectionService:HasTag(child, "Weapon_Model") then model = child break end
+    end
+
+    local assets : weaponAssetsTable = {
+        Model = model,
+        Animations = weaponFolder:FindFirstChild("Animations"),
+        Hitboxes = weaponFolder:FindFirstChild("Hitboxes"),
+    }
+
+    if not assets.Model then warn("Failed to find model for weapon "..weaponName) end
+    if not assets.Animations then warn("Failed to find animations for weapon "..weaponName) end
+    if not assets.Hitboxes then warn("Failed to find hitboxes for weapon "..weaponName) end
+    return assets
+end
 local function getWeaponCopy(player : Player) : Model
     if not PlayerRegistry[player.UserId].weaponData then return end
-    local weapon = Framework.ServerStorage.Weapons.Tools:FindFirstChild(PlayerRegistry[player.UserId].weaponData.weaponName)
+    local weaponAssets = getWeaponAssets(PlayerRegistry[player.UserId].weaponData.weaponName)
+    local weapon = weaponAssets.Model
     if not weapon then warn(string.format("CRITICAL: Weapon %s does not exist in storage for user %s (%s)",PlayerRegistry[player.UserId].weaponData.weaponName,player.Name,player.UserId)) return nil end
     return weapon
 end
@@ -97,7 +119,8 @@ local function getWeaponOnPlayer(player : Player) : Model
     return player.Character:FindFirstChild(PlayerRegistry[player.UserId].weaponData.weaponName)
 end
 local function getWeaponAnimations(weaponName : string) : {lightAttacks: {{track: Animation} & weaponAnimationSounds}, heavyAttack: {track: Animation} & weaponAnimationSounds}
-    local weaponAnims = Framework.ServerStorage.Weapons.Animations:FindFirstChild(weaponName)
+    local weaponAnims = getWeaponAssets(weaponName).Animations
+    if not weaponAnims then return end
 
     local heavyAttackAnim = weaponAnims:FindFirstChild("HeavyAttack") :: Animation
     local entries = {
@@ -126,7 +149,8 @@ local function getWeaponAnimations(weaponName : string) : {lightAttacks: {{track
     return entries
 end
 local function getWeaponHitboxes(weaponName : string) : {lightAttackHitboxes: {Model}, heavyAttackHitbox: Model}
-    local weaponHitboxes = Framework.ServerStorage.Weapons.Hitboxes:FindFirstChild(weaponName)
+    local weaponHitboxes = getWeaponAssets(weaponName).Hitboxes
+    if not weaponHitboxes then return end
 
     local heavyAttackHitbox = weaponHitboxes:FindFirstChild("HeavyAttack") :: Model
     local entries = {

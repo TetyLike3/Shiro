@@ -2,6 +2,7 @@ local RunService = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local StarterPlayer = game:GetService("StarterPlayer")
+local CollectionService = game:GetService("CollectionService")
 
 
 local _PlayerGui : PlayerGui
@@ -97,8 +98,13 @@ end
 
 -- Returns the weapon currently equipped on the player
 local function getWeaponOnPlayer() : Model
-    if not Players.LocalPlayer.Character then return end
-    return Players.LocalPlayer.Character:FindFirstChild("Messer")
+    local char = Players.LocalPlayer.Character
+    if not char then return end
+    for _,child in char:GetChildren() do
+        if CollectionService:HasTag(child, "Weapon_Model") then
+            return child
+        end
+    end
 end
 
 
@@ -138,7 +144,12 @@ local function RenderSteppedCallback(deltaTime)
 
     -- Toggle UI based on weapon presence
     if not weapon then
-        if statusUI.Visible then statusUI.Visible = false end
+        if statusUI.Visible then
+            statusUI.Visible = false
+            statusUI.WeaponLightCooldown.CooldownOverlay.Size = UDim2.fromScale(1,0)
+            statusUI.WeaponHeavyCooldown.CooldownOverlay.Size = UDim2.fromScale(1,0)
+        end
+        return
     else
         if not statusUI.Visible then statusUI.Visible = true end
     end
