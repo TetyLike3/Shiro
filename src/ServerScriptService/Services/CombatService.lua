@@ -212,19 +212,19 @@ function CombatService.Client:UseSkillSlot(player : Player, skillIndex: number, 
         return registeredSkills
     end
 
+
     skillInputData.playerOverrides = playerData.skillOverrides
-    print(skillInputData)
-    local result = skill:Use(skillInputData)
-    
-    -- Set new overrides if there are any
-    if result and result.newCharacterStats then
-        for stat, value in result.newCharacterStats do
+
+    local function changeCharacterStats(newStats)
+        for stat, value in newStats do
             if not playerData.characterStats[stat] then continue end
             playerData.characterStats[stat] = value
         end
         CombatService.Client.Properties.CharacterStats:SetFor(player, playerData.characterStats)
-        print(playerData.characterStats)
     end
+    skillInputData.changeCharacterStats = changeCharacterStats
+    
+    local result = skill:Use(skillInputData)
 
     return registeredSkills
 end

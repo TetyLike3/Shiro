@@ -200,42 +200,43 @@ Skills.FlashStepSkill = SkillsModule.CreateSkill("Sonido", SkillsModule.SkillTyp
     local skillShadowFrequency = applyOverride(inputData.playerOverrides, "FlashStepShadowFrequency", FlashStepShadowFrequency)
     local skillStandingMultiplier = applyOverride(inputData.playerOverrides, "FlashStepStandingMultiplier", FlashStepStandingMultiplier)
     
+    local char = skill.Caster.Character
+    local hum = char.Humanoid
+    hum.WalkSpeed = skillSpeed
+    inputData.changeCharacterStats({walkSpeed = skillSpeed})
+    HideCharacter(char, true)
+
+    char:SetAttribute("PlayFootsteps", false)
     task.spawn(function()
-        local char = skill.Caster.Character
-        local hum = char.Humanoid
-        hum.WalkSpeed = skillSpeed
-        HideCharacter(char, true)
-    
-        char:FindFirstChild("Left Leg"):FindFirstChild("Footstep").Volume = 0
-        char:FindFirstChild("Right Leg"):FindFirstChild("Footstep").Volume = 0
-        task.spawn(function()
-            repeat
-                if not isCharacterMoving(char) then
-                    task.wait(.1)
-                else
-                    CreateCharacterShadow(char)
-                    task.wait(skillShadowFrequency)
-                end
-            until skill.Active == false
-            char:FindFirstChild("Left Leg"):FindFirstChild("Footstep").Volume = .5
-            char:FindFirstChild("Right Leg"):FindFirstChild("Footstep").Volume = .5
-        end)
-    
-        local timeInFlashStep = 0
         repeat
-            task.wait(0.1)
             if not isCharacterMoving(char) then
-                timeInFlashStep += 0.1*skillStandingMultiplier
+                task.wait(.1)
             else
-                timeInFlashStep += 0.1
+                CreateCharacterShadow(char)
+                task.wait(skillShadowFrequency)
             end
-        until timeInFlashStep >= skillDuration
-        hum.WalkSpeed = StarterPlayer.CharacterWalkSpeed
-        task.wait(.2)
-        HideCharacter(char, false)
+        until skill.Active == false
+        char:SetAttribute("PlayFootsteps", true)
     end)
 
-    return {startCooldown = true, newCharacterStats = {walkSpeed = skillSpeed}}
+    local timeInFlashStep = 0
+    repeat
+        task.wait(0.1)
+        if not isCharacterMoving(char) then
+            timeInFlashStep += 0.1*skillStandingMultiplier
+        else
+            timeInFlashStep += 0.1
+        end
+    until timeInFlashStep >= skillDuration
+    hum.WalkSpeed = StarterPlayer.CharacterWalkSpeed
+    inputData.changeCharacterStats({walkSpeed = StarterPlayer.CharacterWalkSpeed})
+    task.wait(.2)
+    HideCharacter(char, false)
+
+    local newCDParticles = StorageFolder.Sonido:FindFirstChild("SonidoCD"):Clone() :: ParticleEmitter
+    Framework.FXReplicator:FireParticleFXEvent(newCDParticles, skill.Caster.Character.HumanoidRootPart, skill.Cooldown)
+
+    return {startCooldown = true}
 end)
 
 --#endregion

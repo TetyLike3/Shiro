@@ -6,10 +6,10 @@ export type CharacterStats = {
 export type SkillInputData = {
     mouseHitPosition: Vector3,
     playerOverrides: {[string]: any},
+    changeCharacterStats: (newStats: CharacterStats) -> (),
 }
 export type SkillOutputData = {
-    startCooldown: boolean,
-    newCharacterStats: CharacterStats?
+    startCooldown: boolean
 }
 
 export type SkillUseFunction = (skill: SkillType, inputData: SkillInputData) -> SkillOutputData
