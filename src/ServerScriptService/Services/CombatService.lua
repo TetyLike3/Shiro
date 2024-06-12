@@ -422,28 +422,13 @@ end
 --[     FRAMEWORK METHODS     ]--
 --[---------------------------]--
 
-local footstepSound = Instance.new("Sound")
-footstepSound.Name = "Footstep"
-footstepSound.SoundId = "rbxassetid://7534137531"
-footstepSound.Volume = 0.5
-
 -- Creates a skill toolbar for a given player
 local function playerAddedCallback(player : Player)
     PlayerRegistry[player.UserId] = {registeredSkills = table.create(10,-1)}
     player.CharacterAdded:Connect(function(character)
-        for _,part:BasePart in character:GetChildren() do
-            if part:IsA("BasePart") then part.CollisionGroup = "PlayerRigs" end
-        end
-        local leftStepSound = footstepSound:Clone()
-        leftStepSound.Parent = character:FindFirstChild("Left Leg")
-        local rightStepSound = footstepSound:Clone()
-        rightStepSound.Parent = character:FindFirstChild("Right Leg")
-
         -- Ragdoll on death :3
         character.Humanoid.BreakJointsOnDeath = false
         character.Humanoid.Died:Once(function()
-            leftStepSound:Destroy()
-            rightStepSound:Destroy()
             RagdollService:RagdollRig(character, 60, character.HumanoidRootPart.CFrame.Position, 0)
         end)
     end)
