@@ -3,6 +3,7 @@ local Types = {}
 Types.FXTypes = {
     Sound = "SOUND",
     Particle = "PARTICLE",
+    PhysicsImpulse = "PHYSICS_IMPULSE",
 }
 
 export type FXDefaultData = {
@@ -14,7 +15,11 @@ export type FXDefaultData = {
 export type FXSoundData = FXDefaultData & {}
 
 export type FXParticleData = FXDefaultData & {
-    emitOnce: boolean,
+    emitFor: number,
+}
+
+export type FXPhysicsImpulseData = FXDefaultData & {
+    impulse: Vector3,
 }
 
 -- Comm

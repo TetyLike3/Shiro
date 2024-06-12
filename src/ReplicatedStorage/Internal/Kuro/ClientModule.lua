@@ -47,36 +47,77 @@ local Types = require(ClientModule.Util.Types)
 local FXEvent = script.Parent:WaitForChild("FXEvent") :: RemoteEvent
 ClientModule.FXEvent = FXEvent
 
-FXEvent.OnClientEvent:Connect(function(fxData : Types.FXDefaultData)
+local function handleSoundFXEvent(fxData : Types.FXSoundData)
 	local inst = getObject(fxData.fxName)
 	if not inst then return end
 	local parent = getObject(fxData.fxParentName)
 	if not parent then return end
 
-	if (fxData.fxType == Types.FXTypes.Sound) then
-		fxData = fxData :: Types.FXSoundData
-		inst = inst :: Sound
-		inst.Parent = parent
-		inst:Play()
-        inst.Ended:Wait()
-        inst:Destroy()
-	elseif (fxData.fxType == Types.FXTypes.Particle) then
-		fxData = fxData :: Types.FXParticleData
-		inst = inst :: Attachment
-		inst.Parent = parent
-		if fxData.emitOnce then
+	inst = inst :: Sound
+	inst.Parent = parent
+	inst:Play()
+	inst.Ended:Wait()
+	inst:Destroy()
+end
+local function handleParticleFXEvent(fxData : Types.FXParticleData)
+	local inst = getObject(fxData.fxName)
+	if not inst then return end
+	local parent = getObject(fxData.fxParentName)
+	if not parent then return end
+
+	inst = inst :: Attachment
+	inst.Parent = parent
+
+	if fxData.emitFor <= 0 then
+		if inst:IsA("Attachment") then
 			for _, emitter in inst:GetDescendants() do
 				if emitter:IsA("ParticleEmitter") then
 					emitter:Emit(1)
+					task.wait(emitter.Lifetime.Max)
+					emitter:Destroy()
 				end
 			end
-		else
+		elseif inst:IsA("ParticleEmitter") then
+			inst:Emit(1)
+			task.wait(inst.Lifetime.Max)
+			inst:Destroy()
+		end
+	else
+		if inst:IsA("Attachment") then
 			for _, emitter in inst:GetDescendants() do
 				if emitter:IsA("ParticleEmitter") then
 					emitter.Enabled = true
+					task.wait(fxData.emitFor)
+					emitter.Enabled = false
+					task.wait(emitter.Lifetime.Max)
+					emitter:Destroy()
 				end
 			end
+		elseif inst:IsA("ParticleEmitter") then
+			inst.Enabled = true
+			task.wait(fxData.emitFor)
+			inst.Enabled = false
+			task.wait(inst.Lifetime.Max)
+			inst:Destroy()
 		end
+	end
+end
+local function handlePhysicsImpulseFXEvent(fxData : Types.FXPhysicsImpulseData)
+	local inst = getObject(fxData.fxName)
+	if not inst then return end
+	local parent = getObject(fxData.fxParentName)
+	if not parent then return end
+
+	inst = inst :: BasePart
+	inst:ApplyImpulse(fxData.impulse)
+end
+
+FXEvent.OnClientEvent:Connect(function(fxData : Types.FXDefaultData)
+	print("Recieved FX data:", fxData)
+
+	if (fxData.fxType == Types.FXTypes.Sound) then handleSoundFXEvent(fxData)
+	elseif (fxData.fxType == Types.FXTypes.Particle) then handleParticleFXEvent(fxData)
+	elseif (fxData.fxType == Types.FXTypes.PhysicsImpulse) then handlePhysicsImpulseFXEvent(fxData)
 	end
 end)
 

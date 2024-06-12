@@ -316,9 +316,9 @@ Skills.FireballSkill = SkillsModule.CreateSkill("Fireball", SkillsModule.SkillTy
         local fireballFire = CreateVFX("Fire")
         fireballFire.Parent = Framework.TempStorage.AttachmentParent
 
-        Framework:FireSoundFXEvent(fireballLoop1, fireball)
-        Framework:FireSoundFXEvent(fireballLoop2, fireball)
-        Framework:FireParticleFXEvent(fireballFire, fireball, false)
+        Framework.FXReplicator:FireSoundFXEvent(fireballLoop1, fireball)
+        Framework.FXReplicator:FireSoundFXEvent(fireballLoop2, fireball)
+        Framework.FXReplicator:FireParticleFXEvent(fireballFire, fireball, FireballLifetime)
     end)
 
     -- Set player to network owner of fireball (probably a vantage point for exploiters)
@@ -370,8 +370,7 @@ Skills.GodraySkill = SkillsModule.CreateSkill("Godray", SkillsModule.SkillTypes.
 
     godraySound = StorageFolder.Godray:FindFirstChild("GodrayFire"):Clone()
     godraySound.PlayOnRemove = true
-    godraySound.Parent = godrayPart
-    godraySound:Destroy()
+    Framework.FXReplicator:FireSoundFXEvent(godraySound, godrayPart)
 
     godrayTween.Completed:Once(function()
         godrayPart:Destroy()

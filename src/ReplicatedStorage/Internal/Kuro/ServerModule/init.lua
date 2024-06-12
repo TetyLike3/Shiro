@@ -1,9 +1,11 @@
 type FrameworkOptions = {
     DebugMode: boolean?,
+    FXReplicatorTimeout: number?,
 }
 
 local defaultOptions: FrameworkOptions = {
-    DebugMode = false
+    DebugMode = false,
+    FXReplicatorTimeout = 5 -- Seconds until the FX being replicated is destroyed
 }
 
 local selectedOptions = defaultOptions
@@ -14,10 +16,13 @@ local function debugPrint(...)
     end
 end
 
+local Debris = game:GetService("Debris")
+local Players = game:GetService("Players")
 
 local ServerModule = {}
 ServerModule.Util = script.Parent.Parent.Util
 ServerModule.Common = require(ServerModule.Util.Common)
+
 ServerModule.SharedStorage = game:GetService("ReplicatedStorage").Framework.Storage :: Folder
 ServerModule.ServerStorage = game:GetService("ServerStorage").Framework :: Folder
 ServerModule.TempStorage = ServerModule.SharedStorage:FindFirstChild("Temp") :: Folder
@@ -33,6 +38,12 @@ if not ServerModule.TempStorage:FindFirstChild("AttachmentParent") then
     attachmentParent.Name = "AttachmentParent"
     attachmentParent.Parent = ServerModule.TempStorage
 end
+
+-- FX Replication
+ServerModule.FXReplicator = require(script.FXReplicator)
+ServerModule.FXReplicator.TempStorage = ServerModule.TempStorage
+ServerModule.FXReplicator.ReplicationTimeout = selectedOptions.FXReplicatorTimeout
+
 
 local serviceStorage = Instance.new("Folder")
 serviceStorage.Name = "Services"
@@ -58,40 +69,6 @@ local PROPERTY_MARKER : Types.RemoteProperty<any> = newproxy(true)
 getmetatable(PROPERTY_MARKER).__tostring = function()
 	return "PROPERTY_MARKER"
 end
-
-
-function ServerModule:FireSoundFXEvent(fx : Instance, parent : Instance)
-    fx.Parent = ServerModule.TempStorage
-
-    local fxData : Types.FXSoundData = {
-        fxType = Types.FXTypes.Sound,
-        fxName = fx:GetFullName(),
-        fxParentName = parent:GetFullName()
-    }
-    ServerModule.FXEvent:FireAllClients(fxData)
-end
-function ServerModule:FireParticleFXEvent(fx : Instance, parent : Instance, emitOnce : boolean)
-    if fx:IsA("Attachment") then
-        fx.Parent = ServerModule.TempStorage.AttachmentParent
-    else
-        fx.Parent = ServerModule.TempStorage
-    end
-
-    local fxData : Types.FXParticleData = {
-        fxType = Types.FXTypes.Particle,
-        fxName = fx:GetFullName(),
-        fxParentName = parent:GetFullName(),
-        emitOnce = emitOnce
-    }
-    ServerModule.FXEvent:FireAllClients(fxData)
-end
-
--- FX event
-local FXEvent = Instance.new("RemoteEvent")
-FXEvent.Name = "FXEvent"
-FXEvent.Parent = script.Parent
-ServerModule.FXEvent = FXEvent
-
 
 type ServiceDefinition = {
     Name: string,
@@ -174,6 +151,48 @@ function ServerModule.CreateProperty(value: any)
     return PROPERTY_MARKER
 end
 
+
+
+local footstepSound = Instance.new("Sound")
+footstepSound.Name = "Footstep"
+footstepSound.SoundId = "rbxassetid://7534137531"
+footstepSound.Volume = 0.5
+
+local function playerAddedCallback(player : Player)
+    -- Footsteps
+    player.CharacterAdded:Connect(function(character)
+        for _,part:BasePart in character:GetChildren() do
+            if part:IsA("BasePart") then part.CollisionGroup = "PlayerRigs" end
+        end
+        local leftStepSound = footstepSound:Clone()
+        leftStepSound.Parent = character:FindFirstChild("Left Leg")
+        local rightStepSound = footstepSound:Clone()
+        rightStepSound.Parent = character:FindFirstChild("Right Leg")
+
+        local leftStepEqualizer = Instance.new("EqualizerSoundEffect")
+        leftStepEqualizer.HighGain = -80
+        leftStepEqualizer.MidGain = -80
+        leftStepEqualizer.LowGain = -80
+        leftStepEqualizer.Name = "stepMute"
+        leftStepEqualizer.Parent = leftStepSound
+        local rightStepEqualizer = leftStepEqualizer:Clone()
+        rightStepEqualizer.Parent = rightStepSound
+
+        character:SetAttribute("PlayFootsteps",true)
+        character:GetAttributeChangedSignal("PlayFootsteps"):Connect(function()
+            leftStepEqualizer.Enabled = not character:GetAttribute("PlayFootsteps")
+            rightStepEqualizer.Enabled = not character:GetAttribute("PlayFootsteps")
+        end)
+        leftStepEqualizer.Enabled = not character:GetAttribute("PlayFootsteps")
+        rightStepEqualizer.Enabled = not character:GetAttribute("PlayFootsteps")
+
+        
+        character.Humanoid.Died:Once(function()
+            leftStepSound:Destroy()
+            rightStepSound:Destroy()
+        end)
+    end)
+end
 
 function ServerModule.Start(options: FrameworkOptions?)
     if isStarting then return Promise.reject("Kuro already started") end
@@ -262,6 +281,15 @@ function ServerModule.Start(options: FrameworkOptions?)
         end)
 
         serviceStorage.Parent = script.Parent
+
+
+        for _,player in Players:GetPlayers() do
+            playerAddedCallback(player)
+        end
+
+        Players.PlayerAdded:Connect(playerAddedCallback)
+
+        print("KURO_SERVER: Framework startup complete")
     end)
 end
 
