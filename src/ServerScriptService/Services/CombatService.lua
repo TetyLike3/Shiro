@@ -309,7 +309,7 @@ function CombatService.Client:LightAttack(player : Player) : (number, RemoteEven
     playerEntry.state = PlayerWeaponStates.Attacking
 
     -- Swing sound
-    Framework:FireSoundFXEvent(animationEntry.swingSound:Clone(), weapon.Handle)
+    Framework.FXReplicator:FireSoundFXEvent(animationEntry.swingSound:Clone(), weapon.Handle)
 
     -- Hitbox
     local hitRigs = {}
@@ -328,7 +328,7 @@ function CombatService.Client:LightAttack(player : Player) : (number, RemoteEven
             hit.Parent:FindFirstChild("Humanoid"):TakeDamage(weapon:GetAttribute("LightAttackDamage"))
             table.insert(hitRigs,hit.Parent)
             if not hitSoundPlayed then
-                Framework:FireSoundFXEvent(animationEntry.hitSound:Clone(), weapon.Handle)
+                Framework.FXReplicator:FireSoundFXEvent(animationEntry.hitSound:Clone(), weapon.Handle)
             end
         end)
     end)
@@ -369,7 +369,7 @@ function CombatService.Client:HeavyAttack(player : Player) : (number, RemoteEven
     playerEntry.state = PlayerWeaponStates.Attacking
 
     -- Swing sound
-    Framework:FireSoundFXEvent(animationEntry.swingSound:Clone(), weapon.Handle)
+    Framework.FXReplicator:FireSoundFXEvent(animationEntry.swingSound:Clone(), weapon.Handle)
 
     -- Hitbox
     local hitRigs = {}
@@ -389,7 +389,7 @@ function CombatService.Client:HeavyAttack(player : Player) : (number, RemoteEven
             RagdollService:RagdollRig(hit.Parent, player, 1, player.Character.HumanoidRootPart.CFrame.Position, 200)
             table.insert(hitRigs,hit.Parent)
             if not hitSoundPlayed then
-                Framework:FireSoundFXEvent(animationEntry.hitSound:Clone(), weapon.Handle)
+                Framework.FXReplicator:FireSoundFXEvent(animationEntry.hitSound:Clone(), weapon.Handle)
                 hitSoundPlayed = true
             end
         end)
