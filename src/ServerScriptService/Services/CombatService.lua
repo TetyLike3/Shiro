@@ -61,7 +61,7 @@ local PlayerWeaponStates = {
     Stunned = "Stunned",
 }
 
-type weaponAnimationSounds = {swingSound: Sound, hitSound: Sound, missSound: Sound}
+type weaponAnimationSounds = {swingSound: Sound, hitSound: Sound}
 type weaponAssetsTable = {Model: Model, Animations: Folder, Hitboxes: Folder}
 
 
@@ -129,7 +129,6 @@ local function getWeaponAnimations(weaponName : string) : {lightAttacks: {{track
             track = heavyAttackAnim,
             swingSound = heavyAttackAnim:FindFirstChild("Swing") :: Sound,
             hitSound = heavyAttackAnim:FindFirstChild("Hit") :: Sound,
-            missSound = heavyAttackAnim:FindFirstChild("Miss") :: Sound,
         }
     }
 
@@ -141,7 +140,6 @@ local function getWeaponAnimations(weaponName : string) : {lightAttacks: {{track
                 track = anim,
                 swingSound = anim:FindFirstChild("Swing") :: Sound,
                 hitSound = anim:FindFirstChild("Hit") :: Sound,
-                missSound = anim:FindFirstChild("Miss") :: Sound,
             }
         end
     end
@@ -363,13 +361,6 @@ function CombatService.Client:LightAttack(player : Player) : (number, RemoteEven
         playerEntry.state = PlayerWeaponStates.Idle
         touchEventConnection:Disconnect()
         hitbox:Destroy()
-
-        -- Play miss sound if no hit sound was played
-        if weapon and weapon.Handle then
-            if not hitSoundPlayed then
-                Framework:FireSoundFXEvent(animationEntry.missSound:Clone(), weapon.Handle)
-            end
-        end
     end)
     animationEntry.track:Play(0.001,animWeight)
 
@@ -426,13 +417,6 @@ function CombatService.Client:HeavyAttack(player : Player) : (number, RemoteEven
         playerEntry.state = PlayerWeaponStates.Idle
         touchEventConnection:Disconnect()
         hitbox:Destroy()
-
-        -- Play miss sound if no hit sound was played
-        if weapon and weapon.Handle then
-            if not hitSoundPlayed then
-                Framework:FireSoundFXEvent(animationEntry.missSound:Clone(), weapon.Handle)
-            end
-        end
     end)
 
     -- Return early to pass cooldown timestamp to client
