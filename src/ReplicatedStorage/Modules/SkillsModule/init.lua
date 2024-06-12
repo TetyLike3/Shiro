@@ -297,12 +297,12 @@ Skills.FireballSkill = SkillsModule.CreateSkill("Fireball", SkillsModule.SkillTy
     hitbox.Parent = fireball
     local hitboxWeld = quickWeld(fireball, hitbox)
 
-    hitbox.Touched:Connect(function(hit)
+    hitbox.Touched:Connect(function(hit : BasePart)
         if hit.Name ~= "HumanoidRootPart" then return end
         if hit.Parent == skill.Caster.Character then return end
         if hit.Parent:FindFirstChild("Humanoid") then
             hit.Parent.Humanoid.Health -= FireballDamage
-            RagdollService:RagdollRig(hit.Parent, 1, fireball.CFrame.Position)
+            RagdollService:RagdollRig(hit.Parent, skill.Caster, 1, fireball.CFrame.Position)
             fireball:Destroy()
         end
     end)
@@ -387,7 +387,7 @@ Skills.GodraySkill = SkillsModule.CreateSkill("Godray", SkillsModule.SkillTypes.
             if hitPlayers[hit.Parent] then continue end
             hit.Parent.Humanoid.Health -= GodrayDamage
             local distance = (godrayGroundPos - hit.CFrame.Position).Magnitude
-            RagdollService:RagdollRig(hit.Parent, 3, godrayGroundPos, 1600*(1-(distance/GodrayRadius)))
+            RagdollService:RagdollRig(hit.Parent, skill.Caster, 3, godrayGroundPos, 1600*(1-(distance/GodrayRadius)))
             hitPlayers[hit.Parent] = true
         end
     end

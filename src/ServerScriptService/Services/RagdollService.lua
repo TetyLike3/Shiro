@@ -55,7 +55,7 @@ end
 --[---------------------------]--
 
 
-function RagdollService:RagdollRig(rig : Model, duration : number, impulseOrigin : Vector3, impulseMagnitude : number?)
+function RagdollService:RagdollRig(rig : Model, networkOwner : Player | nil, duration : number, impulseOrigin : Vector3, impulseMagnitude : number?)
     local humanoid = rig:FindFirstChildOfClass("Humanoid") :: Humanoid
     if not humanoid then return end
     local humRootPart = rig:FindFirstChild("HumanoidRootPart") :: Part
@@ -67,6 +67,8 @@ function RagdollService:RagdollRig(rig : Model, duration : number, impulseOrigin
     if not impulseMagnitude then impulseMagnitude = 500 end
     local impulseVector = (humRootPart.Position - impulseOrigin).Unit * impulseMagnitude
     
+    local originalNetworkOwner = humRootPart:GetNetworkOwner()
+
     -- Spawn in a new thread to avoid yielding the calling thread
     task.spawn(function()
         -- Convert Motor6Ds to BallSocketConstraints
@@ -93,6 +95,10 @@ function RagdollService:RagdollRig(rig : Model, duration : number, impulseOrigin
 
         -- Apply impulse to the HumanoidRootPart
         humRootPart:ApplyImpulse(impulseVector)
+        
+        if networkOwner then
+            humRootPart:SetNetworkOwner(networkOwner)
+        end
 
         task.wait(duration)
 
@@ -115,6 +121,8 @@ function RagdollService:RagdollRig(rig : Model, duration : number, impulseOrigin
         humanoid.RequiresNeck = true
         humanoid.Sit = false
 
+        -- Revert HRP ownership if it was set
+        humRootPart:SetNetworkOwner(originalNetworkOwner)
     end)
 end
 

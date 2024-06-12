@@ -386,7 +386,7 @@ function CombatService.Client:HeavyAttack(player : Player) : (number, RemoteEven
             if not hit.Parent:FindFirstChild("Humanoid") then return end
             if table.find(hitRigs,hit.Parent) then return end
             hit.Parent:FindFirstChild("Humanoid"):TakeDamage(weapon:GetAttribute("HeavyAttackDamage"))
-            RagdollService:RagdollRig(hit.Parent, 1, player.Character.HumanoidRootPart.CFrame.Position, 200)
+            RagdollService:RagdollRig(hit.Parent, player, 1, player.Character.HumanoidRootPart.CFrame.Position, 200)
             table.insert(hitRigs,hit.Parent)
             if not hitSoundPlayed then
                 Framework:FireSoundFXEvent(animationEntry.hitSound:Clone(), weapon.Handle)
@@ -429,7 +429,7 @@ local function playerAddedCallback(player : Player)
         -- Ragdoll on death :3
         character.Humanoid.BreakJointsOnDeath = false
         character.Humanoid.Died:Once(function()
-            RagdollService:RagdollRig(character, 60, character.HumanoidRootPart.CFrame.Position, 0)
+            RagdollService:RagdollRig(character, player, 60, character.HumanoidRootPart.CFrame.Position, 0)
         end)
     end)
 
