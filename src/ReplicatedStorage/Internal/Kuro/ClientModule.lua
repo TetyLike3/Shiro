@@ -83,7 +83,7 @@ end)
 -- Debug system
 ClientModule.Debug = {}
 
-local debugScreenGUI = script:WaitForChild("KuroDebug", 10) :: ScreenGui
+local debugScreenGUI = script.Parent.Parent:WaitForChild("KuroDebug", 10) :: ScreenGui
 debugScreenGUI.Parent = Players.LocalPlayer.PlayerGui
 
 local debugInstances : {Labels : {[string]: Frame}} = {
@@ -245,6 +245,8 @@ function ClientModule.Start(options: FrameworkOptions?)
 		task.defer(function()
 			onStarted:Destroy()
 		end)
+		
+        print("KURO_CLIENT: Framework startup complete")
 	end)
 end
 

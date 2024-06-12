@@ -170,7 +170,6 @@ local function HeartbeatCallback(deltaTime)
                 char.Humanoid.WalkSpeed = StarterPlayer.CharacterWalkSpeed
             end
         else
-            print("Character walking speed not default")
             char.Humanoid.WalkSpeed = characterStatsCache.walkSpeed
         end
     end
@@ -203,7 +202,6 @@ function InputController:FrameworkStart()
     CombatService.Properties.CharacterStats:Observe(function(newStats)
         characterStatsCache = newStats
         debugLabelWalkSpeed.Text = characterStatsCache.walkSpeed
-        print("Character stats changed")
     end)
     debugLabelWalkSpeed.Text = characterStatsCache.walkSpeed
 

@@ -8,7 +8,8 @@
             "Framework": {
                 "$className": "Folder",
                 "Internal": {
-                    "$path": "src/ReplicatedStorage/Internal"
+                    "$path": "src/ReplicatedStorage/Internal",
+                    "$ignoreUnknownInstances": true
                 },
                 "Modules": {
                     "$path": "src/ReplicatedStorage/Modules",
