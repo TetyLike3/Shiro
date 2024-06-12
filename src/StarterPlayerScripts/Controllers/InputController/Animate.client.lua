@@ -31,8 +31,8 @@ local animNames = {
 }
 local animIDs = {
     [animNames.Idle] = "rbxassetid://17661521279",
-    [animNames.Walk] = "rbxassetid://17661156982",
-    [animNames.Run] = "rbxassetid://17623798726",
+    [animNames.Walk] = "rbxassetid://17785726059",
+    [animNames.Run] = "rbxassetid://17785731146",
     [animNames.Jump] = "http://www.roblox.com/asset/?id=125750702",
     [animNames.Climb] = "http://www.roblox.com/asset/?id=180436334",
     [animNames.Sit] = "http://www.roblox.com/asset/?id=178130996",
@@ -134,7 +134,7 @@ local function updateAnimations()
         local animSpeed = Humanoid.WalkSpeed/StarterPlayer.CharacterWalkSpeed
         if animSpeed > 1 then
             playAnimation(animNames.Run, 0.3)
-            animSpeed -= (StarterPlayer.CharacterWalkSpeed/2)
+            animSpeed -= (StarterPlayer.CharacterWalkSpeed/4)
         else
             playAnimation(animNames.Walk, 0.2)
         end
